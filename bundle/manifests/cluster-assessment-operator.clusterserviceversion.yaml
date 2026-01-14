@@ -1,0 +1,364 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: |-
+      [
+        {
+          "apiVersion": "assessment.openshift.io/v1alpha1",
+          "kind": "ClusterAssessment",
+          "metadata": {
+            "name": "production-assessment"
+          },
+          "spec": {
+            "profile": "production",
+            "reportStorage": {
+              "configMap": {
+                "enabled": true,
+                "format": "json,html"
+              }
+            }
+          }
+        }
+      ]
+    capabilities: Basic Install
+    categories: Monitoring,Developer Tools
+    containerImage: ghcr.io/diegobskt/cluster-assessment-operator:v1.0.0
+    description: Read-only OpenShift cluster configuration assessment operator
+    operators.operatorframework.io/builder: operator-sdk-v1.34.0
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v4
+    repository: https://github.com/diegobskt/cluster-assessment-operator
+    support: Community
+  name: cluster-assessment-operator.v1.0.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+      - description: ClusterAssessment triggers read-only assessments of OpenShift cluster configuration
+        displayName: Cluster Assessment
+        kind: ClusterAssessment
+        name: clusterassessments.assessment.openshift.io
+        version: v1alpha1
+        resources:
+          - kind: ConfigMap
+            name: ""
+            version: v1
+        specDescriptors:
+          - description: Baseline profile to use (production or development)
+            displayName: Profile
+            path: profile
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:select:production
+              - urn:alm:descriptor:com.tectonic.ui:select:development
+          - description: Cron schedule for periodic assessments
+            displayName: Schedule
+            path: schedule
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:text
+          - description: Minimum severity level to include in report
+            displayName: Minimum Severity
+            path: minSeverity
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:select:INFO
+              - urn:alm:descriptor:com.tectonic.ui:select:PASS
+              - urn:alm:descriptor:com.tectonic.ui:select:WARN
+              - urn:alm:descriptor:com.tectonic.ui:select:FAIL
+        statusDescriptors:
+          - description: Current phase of the assessment
+            displayName: Phase
+            path: phase
+            x-descriptors:
+              - urn:alm:descriptor:io.kubernetes.phase
+          - description: Overall assessment score (0-100)
+            displayName: Score
+            path: summary.score
+            x-descriptors:
+              - urn:alm:descriptor:text
+          - description: Number of passed checks
+            displayName: Pass Count
+            path: summary.passCount
+            x-descriptors:
+              - urn:alm:descriptor:text
+          - description: Number of failed checks
+            displayName: Fail Count
+            path: summary.failCount
+            x-descriptors:
+              - urn:alm:descriptor:text
+  description: |
+    ## OpenShift Cluster Assessment Operator
+
+    The Cluster Assessment Operator performs **read-only** assessments of OpenShift cluster configuration and generates human-readable reports with findings and recommendations.
+
+    ### Features
+
+    - **12 Validators**: Checks for version, nodes, security, networking, storage, operators, certificates, etcd backup, and more
+    - **Multiple Report Formats**: JSON, HTML, and PDF output
+    - **Baseline Profiles**: Production (strict) and Development (relaxed) thresholds
+    - **Scheduled Assessments**: On-demand or cron-based scheduling
+    - **Prometheus Metrics**: Exposes assessment score and findings as metrics
+    - **Severity Filtering**: Focus on WARN/FAIL findings only
+
+    ### Prerequisites
+
+    - OpenShift 4.12+
+    - Cluster-admin access for assessment
+
+    ### Getting Started
+
+    1. Create a ClusterAssessment resource
+    2. Monitor progress with `oc get clusterassessment -w`
+    3. View findings in the CR status or ConfigMap report
+  displayName: Cluster Assessment Operator
+  icon:
+    - base64data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iIzAwNTE5OSIgZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bS0xIDE3LjkzYy0zLjk1LS40OS03LTMuODUtNy03LjkzIDAtLjYyLjA4LTEuMjEuMjEtMS43OUw5IDEzdjFjMCAxLjEuOSAyIDIgMnYzLjkzem02LjktMi41NGMtLjI2LS44MS0xLTEuMzktMS45LTEuMzloLTFWMTNjMC0uNTUtLjQ1LTEtMS0xSDh2LTJoMmMuNTUgMCAxLS40NSAxLTFWN2gyYzEuMSAwIDItLjkgMi0ydi0uNDFjMi45MyAxLjE5IDUgNC4wNiA1IDcuNDEgMCAyLjA4LS44IDMuOTctMi4xIDUuMzl6Ii8+PC9zdmc+
+      mediatype: image/svg+xml
+  install:
+    spec:
+      clusterPermissions:
+        - rules:
+            - apiGroups:
+                - ""
+              resources:
+                - nodes
+                - namespaces
+                - pods
+                - services
+                - configmaps
+                - secrets
+                - persistentvolumes
+                - persistentvolumeclaims
+                - serviceaccounts
+              verbs:
+                - get
+                - list
+                - watch
+            - apiGroups:
+                - ""
+              resources:
+                - configmaps
+              verbs:
+                - create
+                - update
+                - patch
+                - delete
+            - apiGroups:
+                - config.openshift.io
+              resources:
+                - "*"
+              verbs:
+                - get
+                - list
+                - watch
+            - apiGroups:
+                - machineconfiguration.openshift.io
+              resources:
+                - "*"
+              verbs:
+                - get
+                - list
+                - watch
+            - apiGroups:
+                - security.openshift.io
+              resources:
+                - securitycontextconstraints
+              verbs:
+                - get
+                - list
+                - watch
+            - apiGroups:
+                - storage.k8s.io
+              resources:
+                - storageclasses
+                - csidrivers
+                - csinodes
+              verbs:
+                - get
+                - list
+                - watch
+            - apiGroups:
+                - networking.k8s.io
+              resources:
+                - networkpolicies
+                - ingresses
+              verbs:
+                - get
+                - list
+                - watch
+            - apiGroups:
+                - rbac.authorization.k8s.io
+              resources:
+                - clusterroles
+                - clusterrolebindings
+                - roles
+                - rolebindings
+              verbs:
+                - get
+                - list
+                - watch
+            - apiGroups:
+                - operator.openshift.io
+              resources:
+                - "*"
+              verbs:
+                - get
+                - list
+                - watch
+            - apiGroups:
+                - operators.coreos.com
+              resources:
+                - "*"
+              verbs:
+                - get
+                - list
+                - watch
+            - apiGroups:
+                - monitoring.coreos.com
+              resources:
+                - "*"
+              verbs:
+                - get
+                - list
+                - watch
+            - apiGroups:
+                - apps
+              resources:
+                - deployments
+                - daemonsets
+                - statefulsets
+                - replicasets
+              verbs:
+                - get
+                - list
+                - watch
+            - apiGroups:
+                - batch
+              resources:
+                - cronjobs
+                - jobs
+              verbs:
+                - get
+                - list
+                - watch
+            - apiGroups:
+                - oadp.openshift.io
+              resources:
+                - "*"
+              verbs:
+                - get
+                - list
+                - watch
+            - apiGroups:
+                - assessment.openshift.io
+              resources:
+                - clusterassessments
+              verbs:
+                - create
+                - delete
+                - get
+                - list
+                - patch
+                - update
+                - watch
+            - apiGroups:
+                - assessment.openshift.io
+              resources:
+                - clusterassessments/finalizers
+              verbs:
+                - update
+            - apiGroups:
+                - assessment.openshift.io
+              resources:
+                - clusterassessments/status
+              verbs:
+                - get
+                - patch
+                - update
+          serviceAccountName: cluster-assessment-operator
+      deployments:
+        - name: cluster-assessment-operator
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app.kubernetes.io/name: cluster-assessment-operator
+            template:
+              metadata:
+                labels:
+                  app.kubernetes.io/name: cluster-assessment-operator
+              spec:
+                containers:
+                  - name: manager
+                    image: ghcr.io/diegobskt/cluster-assessment-operator:v1.0.0
+                    imagePullPolicy: IfNotPresent
+                    command:
+                      - /manager
+                    args:
+                      - --leader-elect
+                    ports:
+                      - containerPort: 8080
+                        name: metrics
+                      - containerPort: 8081
+                        name: health
+                    livenessProbe:
+                      httpGet:
+                        path: /healthz
+                        port: 8081
+                      initialDelaySeconds: 15
+                      periodSeconds: 20
+                    readinessProbe:
+                      httpGet:
+                        path: /readyz
+                        port: 8081
+                      initialDelaySeconds: 5
+                      periodSeconds: 10
+                    resources:
+                      limits:
+                        cpu: 500m
+                        memory: 256Mi
+                      requests:
+                        cpu: 100m
+                        memory: 128Mi
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                        drop:
+                          - ALL
+                      readOnlyRootFilesystem: true
+                      runAsNonRoot: true
+                securityContext:
+                  runAsNonRoot: true
+                  seccompProfile:
+                    type: RuntimeDefault
+                serviceAccountName: cluster-assessment-operator
+                terminationGracePeriodSeconds: 10
+    strategy: deployment
+  installModes:
+    - supported: true
+      type: OwnNamespace
+    - supported: true
+      type: SingleNamespace
+    - supported: false
+      type: MultiNamespace
+    - supported: true
+      type: AllNamespaces
+  keywords:
+    - openshift
+    - assessment
+    - cluster
+    - validation
+    - compliance
+    - monitoring
+  links:
+    - name: Documentation
+      url: https://github.com/diegobskt/cluster-assessment-operator
+    - name: Source Code
+      url: https://github.com/diegobskt/cluster-assessment-operator
+  maintainers:
+    - email: support@example.com
+      name: Diego
+  maturity: alpha
+  minKubeVersion: 1.25.0
+  provider:
+    name: Community
+  version: 1.0.0

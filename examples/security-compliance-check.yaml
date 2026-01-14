@@ -1,0 +1,24 @@
+---
+# Example: Targeted security and compliance assessment
+apiVersion: assessment.openshift.io/v1alpha1
+kind: ClusterAssessment
+metadata:
+  name: security-compliance-check
+spec:
+  profile: production
+
+  # Focus on security-related validators only
+  validators:
+    - security
+    - certificates
+    - apiserver
+    - etcdbackup
+
+  # Only show issues that need attention
+  minSeverity: WARN
+
+  reportStorage:
+    configMap:
+      enabled: true
+      name: security-report
+      format: "json,pdf"

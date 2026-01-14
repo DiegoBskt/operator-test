@@ -104,6 +104,14 @@ spec:
                           type: string
                         secretRef:
                           type: string
+                minSeverity:
+                  type: string
+                  description: Minimum severity level to include in report (INFO, PASS, WARN, FAIL).
+                  enum:
+                    - INFO
+                    - PASS
+                    - WARN
+                    - FAIL
             status:
               type: object
               description: ClusterAssessmentStatus defines the observed state of ClusterAssessment.

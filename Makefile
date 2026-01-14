@@ -97,7 +97,32 @@ release-manifests: ## Generate release manifests.
 
 .PHONY: bundle
 bundle: release-manifests ## Generate bundle for OLM.
-	@echo "Bundle generation not yet implemented"
+	cp config/crd/bases/*.yaml bundle/manifests/
+
+BUNDLE_IMG ?= ghcr.io/diegobskt/cluster-assessment-operator-bundle:v1.0.0
+
+.PHONY: bundle-build
+bundle-build: ## Build the bundle image.
+	podman build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+
+.PHONY: bundle-push
+bundle-push: ## Push the bundle image.
+	podman push $(BUNDLE_IMG)
+
+.PHONY: scorecard
+scorecard: ## Run operator-sdk scorecard tests.
+	operator-sdk scorecard bundle --selector=suite=basic
+	operator-sdk scorecard bundle --selector=suite=olm
+
+.PHONY: test-coverage
+test-coverage: ## Run tests with coverage report.
+	go test ./... -coverprofile=coverage.out -covermode=atomic
+	go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report generated: coverage.html"
+
+.PHONY: preflight
+preflight: ## Run Red Hat Preflight certification checks.
+	preflight check container $(IMG) --docker-config ~/.docker/config.json
 
 ##@ Dependencies
 
@@ -109,3 +134,4 @@ deps: ## Download dependencies.
 .PHONY: verify-deps
 verify-deps: ## Verify dependencies.
 	go mod verify
+

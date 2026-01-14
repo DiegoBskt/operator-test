@@ -37,11 +37,14 @@ import (
 
 	// Import validators to register them
 	_ "github.com/openshift-assessment/cluster-assessment-operator/pkg/validators/apiserver"
+	_ "github.com/openshift-assessment/cluster-assessment-operator/pkg/validators/certificates"
 	_ "github.com/openshift-assessment/cluster-assessment-operator/pkg/validators/deprecation"
+	_ "github.com/openshift-assessment/cluster-assessment-operator/pkg/validators/etcdbackup"
 	_ "github.com/openshift-assessment/cluster-assessment-operator/pkg/validators/machineconfig"
 	_ "github.com/openshift-assessment/cluster-assessment-operator/pkg/validators/monitoring"
 	_ "github.com/openshift-assessment/cluster-assessment-operator/pkg/validators/networking"
 	_ "github.com/openshift-assessment/cluster-assessment-operator/pkg/validators/nodes"
+	_ "github.com/openshift-assessment/cluster-assessment-operator/pkg/validators/operators"
 	_ "github.com/openshift-assessment/cluster-assessment-operator/pkg/validators/security"
 	_ "github.com/openshift-assessment/cluster-assessment-operator/pkg/validators/storage"
 	_ "github.com/openshift-assessment/cluster-assessment-operator/pkg/validators/version"

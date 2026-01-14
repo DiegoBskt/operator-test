@@ -1,30 +1,55 @@
 # OpenShift Cluster Assessment Operator
 
-A Kubernetes Operator for Red Hat OpenShift that performs read-only assessments of cluster configuration and generates human-readable reports highlighting configuration gaps, unsupported settings, and improvement opportunities.
+[![Go Version](https://img.shields.io/badge/Go-1.25-blue.svg)](https://golang.org)
+[![OpenShift](https://img.shields.io/badge/OpenShift-4.12+-red.svg)](https://www.redhat.com/en/technologies/cloud-computing/openshift)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-## Overview
+A Kubernetes Operator for Red Hat OpenShift that performs **read-only** assessments of cluster configuration and generates human-readable reports highlighting configuration gaps, unsupported settings, and improvement opportunities.
+
+## 🎯 Overview
 
 The Cluster Assessment Operator is designed for consulting engagements where customers need visibility into their OpenShift cluster's configuration health. It provides:
 
 - **Read-only assessments**: No automatic remediation or configuration changes
-- **Comprehensive validation**: Checks across version, nodes, security, networking, storage, and more
-- **Baseline profiles**: Production and development profiles with appropriate thresholds
-- **Flexible scheduling**: On-demand or cron-scheduled assessments
-- **Multiple report formats**: JSON, HTML, and PDF output stored in ConfigMaps
+- **12 Validators**: Comprehensive checks across platform, security, networking, storage, and more  
+- **Multiple report formats**: JSON, HTML, and PDF output
+- **Baseline profiles**: Production (strict) and Development (relaxed) thresholds
+- **Scheduled assessments**: On-demand or cron-based execution
+- **Prometheus metrics**: Export assessment results as metrics for alerting
+- **Severity filtering**: Focus on WARN/FAIL findings only
 
-## Features
+## ✨ Features
 
-| Category | Validations |
-|----------|-------------|
-| **Platform** | OpenShift version, upgrade channel, lifecycle status, MachineConfig health, API server, etcd |
-| **Infrastructure** | Node count, conditions, roles, OS consistency, resource allocation |
-| **Security** | Cluster-admin bindings, privileged pods, RBAC patterns, etcd encryption, audit logging |
-| **Networking** | CNI type, NetworkPolicies, ingress configuration |
-| **Storage** | StorageClasses, default SC, CSI driver supportability |
-| **Observability** | Monitoring configuration, user workload monitoring, operator status |
-| **Compatibility** | Deprecated APIs, missing probes, resource specifications |
+### Validators
 
-## Installation
+| Validator | Category | Checks |
+|-----------|----------|--------|
+| `version` | Platform | OpenShift version, upgrade channel, update availability |
+| `nodes` | Infrastructure | Node count, conditions, roles, OS consistency |
+| `machineconfig` | Platform | MachineConfigPool health, custom MachineConfigs |
+| `apiserver` | Platform | API server status, etcd health, encryption, audit logging |
+| `operators` | Platform | ClusterServiceVersion states, ClusterOperator health |
+| `certificates` | Security | TLS certificate expiration, custom certs |
+| `etcdbackup` | Platform | OADP, Velero, backup CronJob configuration |
+| `security` | Security | Cluster-admin bindings, privileged pods, RBAC |
+| `networking` | Networking | CNI type, NetworkPolicies, ingress configuration |
+| `storage` | Storage | StorageClasses, default SC, CSI drivers |
+| `monitoring` | Observability | Cluster monitoring, user workload monitoring |
+| `deprecation` | Compatibility | Deprecated patterns, missing probes |
+
+### Prometheus Metrics
+
+```
+cluster_assessment_score{assessment_name, profile}
+cluster_assessment_findings_total{assessment_name, status}
+cluster_assessment_findings_by_category{assessment_name, category, status}
+cluster_assessment_validator_findings{assessment_name, validator, status}
+cluster_assessment_last_run_timestamp{assessment_name}
+cluster_assessment_duration_seconds{assessment_name}
+cluster_assessment_cluster_info{cluster_id, cluster_version, platform, channel}
+```
+
+## 📦 Installation
 
 ### Prerequisites
 
@@ -44,19 +69,20 @@ oc apply -f config/manager/
 ### Build from Source
 
 ```bash
-# Build the operator image
+# Build single-arch image
 make podman-build IMG=your-registry/cluster-assessment-operator:v1.0.0
 
-# Push to registry
-make podman-push IMG=your-registry/cluster-assessment-operator:v1.0.0
+# Build multi-arch image (amd64 + arm64)
+make podman-buildx IMG=your-registry/cluster-assessment-operator:v1.0.0
 
-# Deploy
+# Push and deploy
+make podman-push IMG=your-registry/cluster-assessment-operator:v1.0.0
 make deploy IMG=your-registry/cluster-assessment-operator:v1.0.0
 ```
 
-## Usage
+## 🚀 Usage
 
-### One-Time Assessment with Multiple Report Formats
+### Quick Assessment
 
 ```yaml
 apiVersion: assessment.openshift.io/v1alpha1
@@ -68,253 +94,161 @@ spec:
   reportStorage:
     configMap:
       enabled: true
-      format: "json,html,pdf"  # Generate all formats
+      format: "json,html,pdf"
 ```
 
-Apply and check results:
-
 ```bash
-oc apply -f config/samples/assessment_v1alpha1_clusterassessment.yaml
-
-# Watch progress
+oc apply -f examples/full-production-assessment.yaml
 oc get clusterassessment -w
+```
 
-# View findings in CR status
-oc get clusterassessment production-assessment -o jsonpath='{.status.findings}' | jq .
+### Severity Filtering
+
+Only include WARN and FAIL findings:
+
+```yaml
+spec:
+  profile: production
+  minSeverity: WARN
+  reportStorage:
+    configMap:
+      enabled: true
+      format: "html"
 ```
 
 ### Scheduled Assessment
 
 ```yaml
-apiVersion: assessment.openshift.io/v1alpha1
-kind: ClusterAssessment
-metadata:
-  name: weekly-assessment
 spec:
   schedule: "0 2 * * 0"  # Every Sunday at 2 AM
   profile: production
-  reportStorage:
-    configMap:
-      enabled: true
-      format: "json,html"
 ```
-
-### Development Profile
-
-```yaml
-apiVersion: assessment.openshift.io/v1alpha1
-kind: ClusterAssessment
-metadata:
-  name: dev-assessment
-spec:
-  profile: development  # Relaxed thresholds
-  validators:           # Run specific validators only
-    - version
-    - nodes
-    - security
-  reportStorage:
-    configMap:
-      enabled: true
-      format: "html"  # HTML only for quick review
-```
-
-## Report Formats
-
-The operator supports three report formats:
-
-| Format | Description | Use Case |
-|--------|-------------|----------|
-| **json** | Machine-readable JSON | Integration with other tools, automated processing |
-| **html** | Styled HTML with color-coded findings | Quick browser viewing, sharing via email |
-| **pdf** | Professional PDF with visual summaries | Executive reports, documentation, archiving |
-
-Specify multiple formats with comma separation: `format: "json,html,pdf"`
 
 ### Accessing Reports
 
 ```bash
-# List available report files
-oc get configmap production-assessment-report -n openshift-cluster-assessment -o jsonpath='{.data}' | jq -r 'keys'
+# List report files
+oc get configmap <name>-report -n openshift-cluster-assessment -o jsonpath='{.data}' | jq 'keys'
 
 # Extract HTML report
-oc get configmap production-assessment-report -n openshift-cluster-assessment \
+oc get configmap <name>-report -n openshift-cluster-assessment \
   -o jsonpath='{.data.report\.html}' > report.html
 
-# Extract PDF report (stored as base64 in binaryData)
-oc get configmap production-assessment-report -n openshift-cluster-assessment \
+# Extract PDF report
+oc get configmap <name>-report -n openshift-cluster-assessment \
   -o jsonpath='{.binaryData.report\.pdf}' | base64 -d > report.pdf
-
-# Open HTML in browser
-open report.html
 ```
 
-## Baseline Profiles
+## 📊 Baseline Profiles
 
 ### Production Profile
-
-Strict enterprise requirements for reliability, security, and supportability:
-
+Strict enterprise requirements:
 - Minimum 3 control plane nodes
-- Minimum 3 worker nodes
+- Minimum 3 worker nodes  
 - Network policies required
-- Resource quotas required
-- No privileged containers allowed
-- Updates expected within 90 days
+- No privileged containers
+- Updates within 90 days
 
 ### Development Profile
-
-Relaxed requirements for dev/test environments:
-
+Relaxed for dev/test:
 - Single node supported
-- Network policies optional
 - Privileged containers allowed
-- Updates expected within 180 days
+- Updates within 180 days
 
-## Validators
+## 🔧 Development
 
-The operator includes 9 validators:
+```bash
+# Run tests
+make test
 
-| Validator | Category | Checks |
-|-----------|----------|--------|
-| `version` | Platform | OpenShift version, upgrade channel, update availability, lifecycle status |
-| `nodes` | Infrastructure | Node count, conditions, roles, OS consistency, resource pressure |
-| `machineconfig` | Platform | MachineConfigPool health, custom MachineConfigs |
-| `apiserver` | Platform | API server status, etcd health, encryption, audit logging |
-| `security` | Security | Cluster-admin bindings, privileged pods, RBAC patterns |
-| `networking` | Networking | CNI type, NetworkPolicies, ingress configuration |
-| `storage` | Storage | StorageClasses, default SC, CSI drivers |
-| `monitoring` | Observability | Monitoring config, user workload monitoring |
-| `deprecation` | Compatibility | Deprecated patterns, missing probes, resource limits |
+# Run tests with coverage
+make test-coverage
 
-## Report Structure
+# Lint code
+make lint
 
-Reports include cluster info, summary with score, and detailed findings:
+# Build binary
+make build
 
-```json
-{
-  "metadata": {
-    "generatedAt": "2026-01-14T10:30:00Z",
-    "profile": "production"
-  },
-  "clusterInfo": {
-    "clusterVersion": "4.14.8",
-    "platform": "AWS",
-    "nodeCount": 9
-  },
-  "summary": {
-    "totalChecks": 40,
-    "passCount": 28,
-    "warnCount": 8,
-    "failCount": 3,
-    "infoCount": 1,
-    "score": 78
-  },
-  "findings": [
-    {
-      "id": "security-cluster-admin-excessive",
-      "status": "WARN",
-      "title": "Excessive Cluster-Admin Bindings",
-      "description": "Found 8 non-system cluster-admin bindings",
-      "impact": "Increases attack surface",
-      "recommendation": "Apply least privilege principle"
-    }
-  ]
-}
+# Run locally
+make run
 ```
 
-## Extending the Operator
+## 📋 OLM / OperatorHub
 
-### Adding New Validators
+The operator includes full OLM support:
 
-1. Create a new package under `pkg/validators/`
-2. Implement the `Validator` interface:
+```bash
+# Generate bundle
+make bundle
 
-```go
-type Validator interface {
-    Name() string
-    Description() string
-    Category() string
-    Validate(ctx context.Context, client client.Client, profile profiles.Profile) ([]Finding, error)
-}
+# Build bundle image
+make bundle-build BUNDLE_IMG=your-registry/cluster-assessment-operator-bundle:v1.0.0
+
+# Run scorecard tests
+make scorecard
+
+# Run Red Hat Preflight certification
+make preflight
 ```
 
-3. Register in `init()`:
+### Bundle Contents
+- ClusterServiceVersion with spec/status descriptors
+- Scorecard configuration for OLM validation
+- Multi-architecture support (amd64, arm64)
 
-```go
-func init() {
-    validator.Register(&MyValidator{})
-}
-```
+## 📚 Documentation
 
-4. Import in `main.go`:
+| Document | Description |
+|----------|-------------|
+| [Troubleshooting](docs/troubleshooting.md) | Common issues and solutions |
+| [Upgrade Guide](docs/upgrade.md) | Version upgrade procedures |
+| [Examples](examples/) | Sample ClusterAssessment resources |
 
-```go
-import _ "github.com/.../pkg/validators/myvalidator"
-```
-
-### Adding Profile Thresholds
-
-Edit `pkg/profiles/profiles.go` to add new threshold fields and configure them per profile.
-
-## Architecture
+## 🏗️ Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    ClusterAssessment CR                      │
-│  (spec: profile, schedule, validators, reportStorage)       │
+│  (spec: profile, schedule, validators, minSeverity)         │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                   Assessment Controller                      │
 │  - Triggers assessments (on-demand or scheduled)            │
-│  - Coordinates validators                                   │
-│  - Updates CR status                                        │
+│  - Coordinates validators, filters by severity              │
+│  - Records Prometheus metrics                               │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    Validator Registry                        │
-│  - version, nodes, security, networking, storage, ...       │
+│                 Validator Registry (12 validators)           │
+│  version, nodes, operators, security, networking, ...       │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    Report Generator                          │
 │  - JSON / HTML / PDF output                                 │
-│  - CR status / ConfigMap / Git                              │
+│  - ConfigMap storage                                        │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## RBAC
+## 🔒 Security
 
-The operator uses minimal, read-only permissions for cluster inspection:
+- **Read-only RBAC**: Only `get`, `list`, `watch` on cluster resources
+- **Minimal container**: Distroless base image, non-root user
+- **No privilege escalation**: `allowPrivilegeEscalation: false`
+- **Seccomp**: `RuntimeDefault` profile enabled
 
-- `get`, `list`, `watch` on: nodes, pods, namespaces, configmaps, secrets, etc.
-- `get`, `list`, `watch` on: config.openshift.io/*, machineconfiguration.openshift.io/*
-- `create`, `update` only on: ConfigMaps (for report storage)
+## 🤝 Contributing
 
-See [config/rbac/role.yaml](config/rbac/role.yaml) for full RBAC configuration.
+1. Fork the repository
+2. Create a feature branch
+3. Run tests: `make test`
+4. Submit a pull request
 
-## Development
-
-```bash
-# Run locally
-make run
-
-# Run tests
-make test
-
-# Build binary
-make build
-
-# Build container image
-make podman-build
-
-# Push container image
-make podman-push
-```
-
-## License
+## 📄 License
 
 Apache License 2.0

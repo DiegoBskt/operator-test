@@ -35,6 +35,7 @@ import (
 	configv1 "github.com/openshift/api/config/v1"
 
 	assessmentv1alpha1 "github.com/openshift-assessment/cluster-assessment-operator/api/v1alpha1"
+	"github.com/openshift-assessment/cluster-assessment-operator/pkg/metrics"
 	"github.com/openshift-assessment/cluster-assessment-operator/pkg/profiles"
 	"github.com/openshift-assessment/cluster-assessment-operator/pkg/report"
 	"github.com/openshift-assessment/cluster-assessment-operator/pkg/validator"
@@ -161,6 +162,7 @@ func (r *ClusterAssessmentReconciler) reconcileScheduled(ctx context.Context, as
 // runAssessment executes the assessment.
 func (r *ClusterAssessmentReconciler) runAssessment(ctx context.Context, assessment *assessmentv1alpha1.ClusterAssessment) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
+	startTime := time.Now()
 
 	// Update status to Running
 	if _, err := r.updateStatus(ctx, assessment, assessmentv1alpha1.PhaseRunning, "Assessment in progress"); err != nil {
@@ -188,6 +190,12 @@ func (r *ClusterAssessmentReconciler) runAssessment(ctx context.Context, assessm
 		logger.Error(err, "Assessment failed")
 		return r.updateStatus(ctx, assessment, assessmentv1alpha1.PhaseFailed,
 			fmt.Sprintf("Assessment failed: %v", err))
+	}
+
+	// Apply severity filtering if configured
+	if assessment.Spec.MinSeverity != "" {
+		findings = r.filterBySeverity(findings, assessment.Spec.MinSeverity)
+		logger.Info("Filtered findings by severity", "minSeverity", assessment.Spec.MinSeverity, "filteredCount", len(findings))
 	}
 
 	// Update findings
@@ -246,7 +254,31 @@ func (r *ClusterAssessmentReconciler) runAssessment(ctx context.Context, assessm
 		return ctrl.Result{}, err
 	}
 
-	logger.Info("Assessment completed", "findings", len(findings))
+	// Record Prometheus metrics
+	duration := time.Since(startTime).Seconds()
+	summary := r.calculateSummary(findings, string(profile.Name))
+	score := 0
+	if summary.Score != nil {
+		score = *summary.Score
+	}
+	metrics.RecordAssessmentMetrics(
+		assessment.Name,
+		string(profile.Name),
+		score,
+		summary.PassCount, summary.WarnCount, summary.FailCount, summary.InfoCount,
+		float64(time.Now().Unix()),
+		duration,
+	)
+	metrics.RecordClusterInfo(
+		clusterInfo.ClusterID,
+		clusterInfo.ClusterVersion,
+		clusterInfo.Platform,
+		clusterInfo.Channel,
+	)
+	// Record per-validator metrics
+	r.recordValidatorMetrics(assessment.Name, findings)
+
+	logger.Info("Assessment completed", "findings", len(findings), "duration", duration)
 
 	// If scheduled, requeue for next run
 	if assessment.Spec.Schedule != "" {
@@ -450,6 +482,73 @@ func (r *ClusterAssessmentReconciler) updateStatus(ctx context.Context, assessme
 		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
+}
+
+// recordValidatorMetrics records metrics for each validator
+func (r *ClusterAssessmentReconciler) recordValidatorMetrics(assessmentName string, findings []assessmentv1alpha1.Finding) {
+	// Group findings by validator
+	validatorCounts := make(map[string]map[string]int)
+	categoryCounts := make(map[string]map[string]int)
+
+	for _, f := range findings {
+		// By validator
+		if validatorCounts[f.Validator] == nil {
+			validatorCounts[f.Validator] = make(map[string]int)
+		}
+		validatorCounts[f.Validator][string(f.Status)]++
+
+		// By category
+		if categoryCounts[f.Category] == nil {
+			categoryCounts[f.Category] = make(map[string]int)
+		}
+		categoryCounts[f.Category][string(f.Status)]++
+	}
+
+	// Record validator metrics
+	for validator, counts := range validatorCounts {
+		metrics.RecordValidatorMetrics(
+			assessmentName, validator,
+			counts["PASS"], counts["WARN"], counts["FAIL"], counts["INFO"],
+		)
+	}
+
+	// Record category metrics
+	for category, counts := range categoryCounts {
+		metrics.RecordCategoryMetrics(
+			assessmentName, category,
+			counts["PASS"], counts["WARN"], counts["FAIL"], counts["INFO"],
+		)
+	}
+}
+
+// filterBySeverity filters findings to only include those at or above the minimum severity.
+// Severity order (from lowest to highest): INFO < PASS < WARN < FAIL
+func (r *ClusterAssessmentReconciler) filterBySeverity(findings []assessmentv1alpha1.Finding, minSeverity string) []assessmentv1alpha1.Finding {
+	severityOrder := map[string]int{
+		"INFO": 0,
+		"PASS": 1,
+		"WARN": 2,
+		"FAIL": 3,
+	}
+
+	minLevel, ok := severityOrder[minSeverity]
+	if !ok {
+		// Invalid minSeverity, return all findings
+		return findings
+	}
+
+	var filtered []assessmentv1alpha1.Finding
+	for _, f := range findings {
+		level, ok := severityOrder[string(f.Status)]
+		if !ok {
+			continue
+		}
+		if level >= minLevel {
+			filtered = append(filtered, f)
+		}
+	}
+
+	return filtered
 }
 
 // SetupWithManager sets up the controller with the Manager.

@@ -49,6 +49,13 @@ type ClusterAssessmentSpec struct {
 	// ReportStorage configures where assessment reports are stored.
 	// +optional
 	ReportStorage ReportStorageSpec `json:"reportStorage,omitempty"`
+
+	// MinSeverity filters findings to only include this severity level and above.
+	// Valid values are: "INFO", "PASS", "WARN", "FAIL"
+	// Leave empty to include all findings.
+	// +kubebuilder:validation:Enum=INFO;PASS;WARN;FAIL
+	// +optional
+	MinSeverity string `json:"minSeverity,omitempty"`
 }
 
 // ReportStorageSpec configures report storage options

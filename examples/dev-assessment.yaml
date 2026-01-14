@@ -1,0 +1,21 @@
+---
+# Example: Development cluster assessment
+apiVersion: assessment.openshift.io/v1alpha1
+kind: ClusterAssessment
+metadata:
+  name: dev-assessment
+spec:
+  # Use relaxed development profile
+  profile: development
+
+  # Only run specific validators
+  validators:
+    - version
+    - nodes
+    - operators
+    - security
+
+  reportStorage:
+    configMap:
+      enabled: true
+      format: "html"

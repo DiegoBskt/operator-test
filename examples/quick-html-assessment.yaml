@@ -1,0 +1,12 @@
+---
+# Example: Quick one-time assessment with HTML report
+apiVersion: assessment.openshift.io/v1alpha1
+kind: ClusterAssessment
+metadata:
+  name: quick-html-assessment
+spec:
+  profile: production
+  reportStorage:
+    configMap:
+      enabled: true
+      format: "html"

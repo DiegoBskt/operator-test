@@ -1,0 +1,16 @@
+---
+# Example: Full production assessment with all report formats
+apiVersion: assessment.openshift.io/v1alpha1
+kind: ClusterAssessment
+metadata:
+  name: full-production-assessment
+spec:
+  # Use production profile with strict thresholds
+  profile: production
+
+  # Generate all report formats
+  reportStorage:
+    configMap:
+      enabled: true
+      name: full-assessment-report
+      format: "json,html,pdf"

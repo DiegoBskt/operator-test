@@ -1,0 +1,19 @@
+---
+# Example: Weekly scheduled assessment with WARN/FAIL only
+apiVersion: assessment.openshift.io/v1alpha1
+kind: ClusterAssessment
+metadata:
+  name: weekly-critical-findings
+spec:
+  # Run every Sunday at 2 AM
+  schedule: "0 2 * * 0"
+
+  profile: production
+
+  # Only report WARN and FAIL findings
+  minSeverity: WARN
+
+  reportStorage:
+    configMap:
+      enabled: true
+      format: "json,html"
