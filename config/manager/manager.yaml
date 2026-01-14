@@ -33,7 +33,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: manager
-          image: quay.io/openshift-assessment/cluster-assessment-operator:latest
+          image: ghcr.io/diegobskt/cluster-assessment-operator:v1.0.0
           imagePullPolicy: IfNotPresent
           command:
             - /manager
