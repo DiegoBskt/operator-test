@@ -98,28 +98,38 @@ func (r *ClusterAssessmentReconciler) reconcileOneTime(ctx context.Context, asse
 
 	// Check for stuck Running assessments (timeout after 5 minutes)
 	if assessment.Status.Phase == assessmentv1alpha1.PhaseRunning {
-		if assessment.Status.LastRunTime != nil {
-			stuckDuration := time.Since(assessment.Status.LastRunTime.Time)
+		// Re-fetch to get latest status (avoid race with concurrent completion)
+		latestAssessment := &assessmentv1alpha1.ClusterAssessment{}
+		if err := r.Get(ctx, client.ObjectKeyFromObject(assessment), latestAssessment); err != nil {
+			return ctrl.Result{}, err
+		}
+
+		// If it completed or failed while we were checking, skip
+		if latestAssessment.Status.Phase == assessmentv1alpha1.PhaseCompleted ||
+			latestAssessment.Status.Phase == assessmentv1alpha1.PhaseFailed {
+			return ctrl.Result{}, nil
+		}
+
+		if latestAssessment.Status.LastRunTime != nil {
+			stuckDuration := time.Since(latestAssessment.Status.LastRunTime.Time)
 			if stuckDuration > 5*time.Minute {
 				logger.Info("Assessment appears stuck, resetting to allow retry", "stuckDuration", stuckDuration)
-				assessment.Status.Phase = assessmentv1alpha1.PhaseFailed
-				assessment.Status.Message = "Assessment timed out after 5 minutes, restarting..."
-				if err := r.Status().Update(ctx, assessment); err != nil {
-					return ctrl.Result{}, err
+				latestAssessment.Status.Phase = assessmentv1alpha1.PhaseFailed
+				latestAssessment.Status.Message = "Assessment timed out after 5 minutes, restarting..."
+				if err := r.Status().Update(ctx, latestAssessment); err != nil {
+					return ctrl.Result{RequeueAfter: time.Second}, nil // Retry on conflict
 				}
-				// Continue to run the assessment
+				// Requeue to run the assessment
+				return ctrl.Result{Requeue: true}, nil
 			} else {
 				logger.Info("Assessment already running, skipping", "runningFor", stuckDuration)
 				return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 			}
 		} else {
 			// No LastRunTime set but Running - likely stuck from previous instance
-			logger.Info("Assessment stuck in Running without LastRunTime, resetting")
-			assessment.Status.Phase = assessmentv1alpha1.PhaseFailed
-			assessment.Status.Message = "Assessment was stuck, restarting..."
-			if err := r.Status().Update(ctx, assessment); err != nil {
-				return ctrl.Result{}, err
-			}
+			// Wait a bit before declaring stuck (give time for in-progress assessment)
+			logger.Info("Assessment in Running state without LastRunTime, requeuing to check again")
+			return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
 		}
 	}
 
