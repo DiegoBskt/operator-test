@@ -335,16 +335,50 @@ oc get pods -n openshift-operators | grep cluster-assessment
 |----------|-------------|
 | [Troubleshooting](docs/troubleshooting.md) | Common issues and solutions |
 | [Upgrade Guide](docs/upgrade.md) | Version upgrade procedures |
+| [Contributing](CONTRIBUTING.md) | Guidelines for contributors |
+| [Changelog](CHANGELOG.md) | Version history and changes |
 | [Examples](examples/) | Sample ClusterAssessment resources |
+
+---
+
+## 🔄 CI/CD
+
+This project uses GitHub Actions for automation:
+
+| Workflow | Trigger | Description |
+|----------|---------|-------------|
+| **CI** | Push/PR to main | Lint, test, build, validate bundle |
+| **Release** | Tag `v*` | Build multi-arch images, create GitHub release |
+| **Scorecard** | Bundle changes | OLM scorecard and bundle validation |
+| **Dependabot** | Weekly | Automated dependency updates |
+
+### Creating a Release
+
+```bash
+# Update CHANGELOG.md with new version notes
+# Then create and push a tag
+git tag v1.1.0
+git push origin v1.1.0
+```
+
+This triggers the release workflow which:
+1. Builds multi-arch images (amd64 + arm64)
+2. Pushes to GitHub Container Registry
+3. Creates a GitHub Release with install.yaml
 
 ---
 
 ## 🤝 Contributing
 
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+**Quick start:**
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Run tests: `make test && make lint`
-4. Submit a pull request
+3. Make changes and add tests
+4. Run checks: `make test && make lint`
+5. Commit using [Conventional Commits](https://www.conventionalcommits.org/)
+6. Submit a pull request
 
 ---
 

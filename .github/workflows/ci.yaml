@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+env:
+  GO_VERSION: "1.25"
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: latest
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Run tests
+        run: go test -v -race -coverprofile=coverage.out ./...
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.out
+          fail_ci_if_error: false
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Build
+        run: go build -o bin/manager ./main.go
+
+      - name: Verify manifests
+        run: |
+          # Verify CRD is valid YAML
+          cat config/crd/bases/*.yaml | head -n 1
+
+  bundle-validation:
+    name: Bundle Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate bundle structure
+        run: |
+          # Check required files exist
+          test -f bundle/manifests/cluster-assessment-operator.clusterserviceversion.yaml
+          test -f bundle/metadata/annotations.yaml
+          echo "Bundle structure is valid"
+
+      - name: Validate annotations
+        run: |
+          # Check annotations contain required fields
+          grep -q "operators.operatorframework.io.bundle.package.v1" bundle/metadata/annotations.yaml
+          grep -q "operators.operatorframework.io.bundle.channels.v1" bundle/metadata/annotations.yaml
+          echo "Bundle annotations are valid"

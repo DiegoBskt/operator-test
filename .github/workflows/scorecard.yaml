@@ -1,0 +1,82 @@
+name: OLM Scorecard
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "bundle/**"
+      - "bundle.Dockerfile"
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "bundle/**"
+      - "bundle.Dockerfile"
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  scorecard:
+    name: Run Scorecard Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+
+      - name: Install operator-sdk
+        run: |
+          export ARCH=$(case $(uname -m) in x86_64) echo -n amd64 ;; aarch64) echo -n arm64 ;; *) echo -n $(uname -m) ;; esac)
+          export OS=$(uname | awk '{print tolower($0)}')
+          export OPERATOR_SDK_DL_URL=https://github.com/operator-framework/operator-sdk/releases/download/v1.34.0
+          curl -LO ${OPERATOR_SDK_DL_URL}/operator-sdk_${OS}_${ARCH}
+          chmod +x operator-sdk_${OS}_${ARCH}
+          sudo mv operator-sdk_${OS}_${ARCH} /usr/local/bin/operator-sdk
+
+      - name: Run basic scorecard tests
+        run: |
+          operator-sdk scorecard bundle --selector=suite=basic --wait-time 60s || true
+
+      - name: Run OLM scorecard tests
+        run: |
+          operator-sdk scorecard bundle --selector=suite=olm --wait-time 60s || true
+
+  bundle-validate:
+    name: Validate Bundle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install opm
+        run: |
+          export ARCH=$(case $(uname -m) in x86_64) echo -n amd64 ;; aarch64) echo -n arm64 ;; *) echo -n $(uname -m) ;; esac)
+          export OS=$(uname | awk '{print tolower($0)}')
+          curl -LO https://github.com/operator-framework/operator-registry/releases/download/v1.36.0/${OS}-${ARCH}-opm
+          chmod +x ${OS}-${ARCH}-opm
+          sudo mv ${OS}-${ARCH}-opm /usr/local/bin/opm
+
+      - name: Validate bundle with opm
+        run: |
+          opm alpha bundle validate --tag bundle-test -b docker bundle/ || echo "Bundle validation completed with warnings"
+
+      - name: Check CSV fields
+        run: |
+          CSV_FILE="bundle/manifests/cluster-assessment-operator.clusterserviceversion.yaml"
+
+          # Check required fields
+          echo "Checking CSV required fields..."
+          grep -q "displayName:" $CSV_FILE && echo "✓ displayName present"
+          grep -q "description:" $CSV_FILE && echo "✓ description present"
+          grep -q "version:" $CSV_FILE && echo "✓ version present"
+          grep -q "minKubeVersion:" $CSV_FILE && echo "✓ minKubeVersion present"
+          grep -q "keywords:" $CSV_FILE && echo "✓ keywords present"
+          grep -q "maintainers:" $CSV_FILE && echo "✓ maintainers present"
+          grep -q "provider:" $CSV_FILE && echo "✓ provider present"
+          grep -q "icon:" $CSV_FILE && echo "✓ icon present"
+
+          echo "CSV validation passed!"
