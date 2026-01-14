@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -204,24 +205,38 @@ func (r *ClusterAssessmentReconciler) runAssessment(ctx context.Context, assessm
 		}
 	}
 
-	// Update status to Completed
-	now := metav1.Now()
-	assessment.Status.LastRunTime = &now
-	assessment.Status.Phase = assessmentv1alpha1.PhaseCompleted
-	assessment.Status.Message = fmt.Sprintf("Assessment completed with %d findings", len(findings))
+	// Update status to Completed with retry on conflict
+	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		// Re-fetch the latest version
+		latest := &assessmentv1alpha1.ClusterAssessment{}
+		if err := r.Get(ctx, client.ObjectKeyFromObject(assessment), latest); err != nil {
+			return err
+		}
 
-	// Update conditions
-	assessment.Status.Conditions = []metav1.Condition{
-		{
-			Type:               "Ready",
-			Status:             metav1.ConditionTrue,
-			LastTransitionTime: now,
-			Reason:             "AssessmentCompleted",
-			Message:            assessment.Status.Message,
-		},
-	}
+		// Update status fields
+		now := metav1.Now()
+		latest.Status.LastRunTime = &now
+		latest.Status.Phase = assessmentv1alpha1.PhaseCompleted
+		latest.Status.Message = fmt.Sprintf("Assessment completed with %d findings", len(findings))
+		latest.Status.ClusterInfo = clusterInfo
+		latest.Status.Findings = findings
+		latest.Status.Summary = r.calculateSummary(findings, string(profile.Name))
+		latest.Status.ReportConfigMap = assessment.Status.ReportConfigMap
 
-	if err := r.Status().Update(ctx, assessment); err != nil {
+		// Update conditions
+		latest.Status.Conditions = []metav1.Condition{
+			{
+				Type:               "Ready",
+				Status:             metav1.ConditionTrue,
+				LastTransitionTime: now,
+				Reason:             "AssessmentCompleted",
+				Message:            latest.Status.Message,
+			},
+		}
+
+		return r.Status().Update(ctx, latest)
+	})
+	if err != nil {
 		logger.Error(err, "Failed to update status")
 		return ctrl.Result{}, err
 	}
@@ -231,8 +246,9 @@ func (r *ClusterAssessmentReconciler) runAssessment(ctx context.Context, assessm
 	// If scheduled, requeue for next run
 	if assessment.Spec.Schedule != "" {
 		schedule, _ := cron.ParseStandard(assessment.Spec.Schedule)
-		nextRun := schedule.Next(now.Time)
-		requeueAfter := nextRun.Sub(now.Time)
+		now := time.Now()
+		nextRun := schedule.Next(now)
+		requeueAfter := nextRun.Sub(now)
 		return ctrl.Result{RequeueAfter: requeueAfter}, nil
 	}
 
