@@ -293,29 +293,29 @@ oc get pods -n openshift-operators | grep cluster-assessment
 
 ## 🏗️ Architecture
 
+```mermaid
+flowchart TB
+    CR["ClusterAssessment CR"] --> Controller["Assessment Controller"]
+    Controller --> Registry["Validator Registry\n(12 validators)"]
+    Registry --> Reporter["Report Generator\n(JSON/HTML/PDF)"]
+    Reporter --> ConfigMap["ConfigMap"]
+    Controller --> Metrics["Prometheus Metrics"]
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                    ClusterAssessment CR                       │
-└──────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌──────────────────────────────────────────────────────────────┐
-│                   Assessment Controller                       │
-│  • Reconciles ClusterAssessment resources                    │
-│  • Triggers validators, calculates scores                    │
-│  • Records Prometheus metrics                                │
-└──────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌──────────────────────────────────────────────────────────────┐
-│              Validator Registry (12 validators)               │
-└──────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌──────────────────────────────────────────────────────────────┐
-│     Report Generator (JSON / HTML / PDF → ConfigMap)         │
-└──────────────────────────────────────────────────────────────┘
-```
+
+| Component | Purpose |
+|-----------|---------|
+| **ClusterAssessment CR** | Defines assessment parameters (profile, schedule, validators) |
+| **Assessment Controller** | Reconciles resources, triggers validators, calculates scores |
+| **Validator Registry** | Manages 12 validators across Platform, Security, Networking, Storage |
+| **Report Generator** | Produces JSON, HTML, and PDF reports |
+| **Prometheus Metrics** | Exports scores and findings for alerting |
+
+📐 **See [Architecture Documentation](docs/architecture.md) for detailed diagrams** including:
+- High-level architecture flowchart
+- Component interaction sequence diagram
+- Validator categories mindmap
+- Assessment lifecycle state machine
+- Data model ERD
 
 ---
 
