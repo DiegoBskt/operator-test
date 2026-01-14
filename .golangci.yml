@@ -1,0 +1,35 @@
+run:
+  timeout: 5m
+  go: "1.23" # golangci-lint target version (for compatibility)
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gofmt
+    - goimports
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+  govet:
+    enable-all: true
+    disable:
+      - fieldalignment
+  staticcheck:
+    checks: ["all"]
+
+issues:
+  exclude-rules:
+    # Ignore test files
+    - path: _test\.go
+      linters:
+        - errcheck
+    # Ignore generated files
+    - path: zz_generated
+      linters:
+        - all

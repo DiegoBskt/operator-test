@@ -22,9 +22,12 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v6
         with:
           version: latest
+          # Skip verifying Go version compatibility (needed for Go 1.25+)
+          args: --timeout=5m
+          skip-pkg-cache: true
 
   test:
     name: Test
