@@ -6,6 +6,12 @@ metadata:
   labels:
     openshift.io/cluster-monitoring: "true"
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cluster-assessment-operator
+  namespace: openshift-cluster-assessment
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
