@@ -37,3 +37,9 @@ debug
 # Local environment
 .env
 .envrc
+
+# OPM/Catalog build artifacts
+database/
+bundle-*/
+catalog.Dockerfile
+index.db
