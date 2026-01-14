@@ -24,9 +24,11 @@ jobs:
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v7
+        env:
+          GOMAXPROCS: 1
         with:
           version: v2.0
-          args: --timeout=5m
+          args: --timeout=10m --concurrency=1
 
   test:
     name: Test
