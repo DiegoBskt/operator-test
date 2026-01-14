@@ -280,6 +280,43 @@ spec:
                 - patch
                 - update
           serviceAccountName: cluster-assessment-operator
+      permissions:
+        - rules:
+            # Leader election
+            - apiGroups:
+                - coordination.k8s.io
+              resources:
+                - leases
+              verbs:
+                - get
+                - list
+                - watch
+                - create
+                - update
+                - patch
+                - delete
+            # Events
+            - apiGroups:
+                - ""
+              resources:
+                - events
+              verbs:
+                - create
+                - patch
+            # ConfigMaps for leader election (fallback)
+            - apiGroups:
+                - ""
+              resources:
+                - configmaps
+              verbs:
+                - get
+                - list
+                - watch
+                - create
+                - update
+                - patch
+                - delete
+          serviceAccountName: cluster-assessment-operator
       deployments:
         - name: cluster-assessment-operator
           spec:
@@ -319,11 +356,11 @@ spec:
                       periodSeconds: 10
                     resources:
                       limits:
-                        cpu: 500m
-                        memory: 256Mi
+                        cpu: "1"
+                        memory: 2Gi
                       requests:
-                        cpu: 100m
-                        memory: 128Mi
+                        cpu: 200m
+                        memory: 512Mi
                     securityContext:
                       allowPrivilegeEscalation: false
                       capabilities:

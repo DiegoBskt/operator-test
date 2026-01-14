@@ -91,13 +91,36 @@ func (r *ClusterAssessmentReconciler) Reconcile(ctx context.Context, req ctrl.Re
 func (r *ClusterAssessmentReconciler) reconcileOneTime(ctx context.Context, assessment *assessmentv1alpha1.ClusterAssessment) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
-	// Skip if already completed or currently running
+	// Skip if already completed
 	if assessment.Status.Phase == assessmentv1alpha1.PhaseCompleted {
 		return ctrl.Result{}, nil
 	}
+
+	// Check for stuck Running assessments (timeout after 5 minutes)
 	if assessment.Status.Phase == assessmentv1alpha1.PhaseRunning {
-		logger.Info("Assessment already running, skipping")
-		return ctrl.Result{}, nil
+		if assessment.Status.LastRunTime != nil {
+			stuckDuration := time.Since(assessment.Status.LastRunTime.Time)
+			if stuckDuration > 5*time.Minute {
+				logger.Info("Assessment appears stuck, resetting to allow retry", "stuckDuration", stuckDuration)
+				assessment.Status.Phase = assessmentv1alpha1.PhaseFailed
+				assessment.Status.Message = "Assessment timed out after 5 minutes, restarting..."
+				if err := r.Status().Update(ctx, assessment); err != nil {
+					return ctrl.Result{}, err
+				}
+				// Continue to run the assessment
+			} else {
+				logger.Info("Assessment already running, skipping", "runningFor", stuckDuration)
+				return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+			}
+		} else {
+			// No LastRunTime set but Running - likely stuck from previous instance
+			logger.Info("Assessment stuck in Running without LastRunTime, resetting")
+			assessment.Status.Phase = assessmentv1alpha1.PhaseFailed
+			assessment.Status.Message = "Assessment was stuck, restarting..."
+			if err := r.Status().Update(ctx, assessment); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
 	}
 
 	// Skip if suspended

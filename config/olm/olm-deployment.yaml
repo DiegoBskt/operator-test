@@ -1,0 +1,46 @@
+---
+# Namespace for the operator
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-cluster-assessment
+  labels:
+    openshift.io/cluster-monitoring: "true"
+---
+# OperatorGroup to control operator scope
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: cluster-assessment-operator
+  namespace: openshift-cluster-assessment
+spec:
+  # Empty targetNamespaces = AllNamespaces mode (cluster-scoped)
+  targetNamespaces: []
+---
+# CatalogSource pointing to our catalog image
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: cluster-assessment-catalog
+  namespace: openshift-marketplace
+spec:
+  sourceType: grpc
+  image: ghcr.io/diegobskt/cluster-assessment-operator-catalog:v1.0.0
+  displayName: Cluster Assessment Operator
+  publisher: Community
+  updateStrategy:
+    registryPoll:
+      interval: 10m
+---
+# Subscription to install the operator
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: cluster-assessment-operator
+  namespace: openshift-cluster-assessment
+spec:
+  channel: stable
+  name: cluster-assessment-operator
+  source: cluster-assessment-catalog
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
