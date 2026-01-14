@@ -17,7 +17,7 @@ formatters:
     - gofmt
     - goimports
 
-linters-settings:
+settings:
   errcheck:
     check-type-assertions: true
   govet:
@@ -26,11 +26,12 @@ linters-settings:
       - fieldalignment
 
 issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - errcheck
-    - path: zz_generated
-      linters:
-        - errcheck
-        - govet
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+      - path: zz_generated
+        linters:
+          - errcheck
+          - govet
