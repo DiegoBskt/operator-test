@@ -35,10 +35,10 @@ The Cluster Assessment Operator is designed for consulting engagements where cus
 git clone https://github.com/diegobskt/cluster-assessment-operator.git
 cd cluster-assessment-operator
 
-# Install CRDs and RBAC
+# Install CRDs, namespace, RBAC, and manager (order matters!)
 oc apply -f config/crd/bases/
-oc apply -f config/rbac/
-oc apply -f config/manager/
+oc apply -f config/manager/    # Creates namespace first
+oc apply -f config/rbac/       # Requires namespace to exist
 ```
 
 ### 2. Run Your First Assessment
