@@ -24,10 +24,8 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: latest
-          # Skip verifying Go version compatibility (needed for Go 1.25+)
+          version: v2.0
           args: --timeout=5m
-          skip-pkg-cache: true
 
   test:
     name: Test
