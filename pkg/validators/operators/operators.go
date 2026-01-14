@@ -36,7 +36,7 @@ const (
 )
 
 func init() {
-	validator.Register(&OperatorsValidator{})
+	_ = validator.Register(&OperatorsValidator{})
 }
 
 // OperatorsValidator checks operator health via CSVs.

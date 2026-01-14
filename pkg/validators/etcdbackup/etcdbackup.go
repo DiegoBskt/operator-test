@@ -38,7 +38,7 @@ const (
 )
 
 func init() {
-	validator.Register(&EtcdBackupValidator{})
+	_ = validator.Register(&EtcdBackupValidator{})
 }
 
 // EtcdBackupValidator checks etcd backup configuration.

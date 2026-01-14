@@ -36,7 +36,7 @@ const (
 )
 
 func init() {
-	validator.Register(&MonitoringValidator{})
+	_ = validator.Register(&MonitoringValidator{})
 }
 
 // MonitoringValidator checks monitoring configuration.

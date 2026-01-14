@@ -41,13 +41,13 @@ type MachineConfigPool struct {
 type MachineConfigPoolSpec struct {
 	// MachineConfigSelector selects which MachineConfigs to apply.
 	MachineConfigSelector *metav1.LabelSelector `json:"machineConfigSelector,omitempty"`
-	
+
 	// NodeSelector selects which nodes belong to this pool.
 	NodeSelector *metav1.LabelSelector `json:"nodeSelector,omitempty"`
-	
+
 	// Paused specifies whether or not changes to this pool should be ignored.
 	Paused bool `json:"paused,omitempty"`
-	
+
 	// MaxUnavailable specifies the maximum number of nodes that can be unavailable during update.
 	MaxUnavailable *int32 `json:"maxUnavailable,omitempty"`
 }
@@ -56,32 +56,32 @@ type MachineConfigPoolSpec struct {
 type MachineConfigPoolStatus struct {
 	// ObservedGeneration is the generation observed by the controller.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
-	
+
 	// Configuration contains the current rendered configuration.
 	Configuration MachineConfigPoolStatusConfiguration `json:"configuration,omitempty"`
-	
+
 	// MachineCount is the total number of machines in the pool.
 	MachineCount int32 `json:"machineCount,omitempty"`
-	
+
 	// UpdatedMachineCount is the number of machines that have been updated.
 	UpdatedMachineCount int32 `json:"updatedMachineCount,omitempty"`
-	
+
 	// ReadyMachineCount is the number of ready machines.
 	ReadyMachineCount int32 `json:"readyMachineCount,omitempty"`
-	
+
 	// UnavailableMachineCount is the number of unavailable machines.
 	UnavailableMachineCount int32 `json:"unavailableMachineCount,omitempty"`
-	
+
 	// DegradedMachineCount is the number of degraded machines.
 	DegradedMachineCount int32 `json:"degradedMachineCount,omitempty"`
-	
+
 	// Conditions represent the latest observations of the pool's state.
 	Conditions []MachineConfigPoolCondition `json:"conditions,omitempty"`
 }
 
 // MachineConfigPoolStatusConfiguration contains the current rendered configuration.
 type MachineConfigPoolStatusConfiguration struct {
-	Name   string `json:"name,omitempty"`
+	Name   string                          `json:"name,omitempty"`
 	Source []MachineConfigPoolConfigSource `json:"source,omitempty"`
 }
 
@@ -138,19 +138,19 @@ type MachineConfig struct {
 type MachineConfigSpec struct {
 	// OSImageURL is the URL of the OS image.
 	OSImageURL string `json:"osImageURL,omitempty"`
-	
+
 	// Config is the Ignition config object.
 	Config interface{} `json:"config,omitempty"`
-	
+
 	// KernelArguments is a list of kernel arguments.
 	KernelArguments []string `json:"kernelArguments,omitempty"`
-	
+
 	// Extensions is a list of extensions.
 	Extensions []string `json:"extensions,omitempty"`
-	
+
 	// FIPS indicates whether FIPS mode is enabled.
 	FIPS bool `json:"fips,omitempty"`
-	
+
 	// KernelType indicates the type of kernel.
 	KernelType string `json:"kernelType,omitempty"`
 }

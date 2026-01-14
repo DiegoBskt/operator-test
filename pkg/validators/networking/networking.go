@@ -37,7 +37,7 @@ const (
 )
 
 func init() {
-	validator.Register(&NetworkingValidator{})
+	_ = validator.Register(&NetworkingValidator{})
 }
 
 // NetworkingValidator checks networking configuration.

@@ -36,7 +36,7 @@ const (
 )
 
 func init() {
-	validator.Register(&NodesValidator{})
+	_ = validator.Register(&NodesValidator{})
 }
 
 // NodesValidator checks node configuration.

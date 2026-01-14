@@ -38,34 +38,34 @@ const (
 
 // Namespaces that are expected to have cluster-admin or privileged access
 var systemNamespaces = map[string]bool{
-	"openshift-apiserver":                  true,
-	"openshift-controller-manager":         true,
-	"openshift-etcd":                       true,
-	"openshift-kube-apiserver":             true,
-	"openshift-kube-controller-manager":    true,
-	"openshift-kube-scheduler":             true,
-	"openshift-machine-api":                true,
-	"openshift-machine-config-operator":    true,
-	"openshift-monitoring":                 true,
-	"openshift-network-operator":           true,
-	"openshift-sdn":                        true,
-	"openshift-ovn-kubernetes":             true,
-	"openshift-operator-lifecycle-manager": true,
-	"openshift-operators":                  true,
-	"openshift-cluster-version":            true,
-	"openshift-ingress":                    true,
-	"openshift-dns":                        true,
-	"openshift-image-registry":             true,
-	"openshift-authentication":             true,
-	"openshift-oauth-apiserver":            true,
-	"kube-system":                          true,
+	"openshift-apiserver":                    true,
+	"openshift-controller-manager":           true,
+	"openshift-etcd":                         true,
+	"openshift-kube-apiserver":               true,
+	"openshift-kube-controller-manager":      true,
+	"openshift-kube-scheduler":               true,
+	"openshift-machine-api":                  true,
+	"openshift-machine-config-operator":      true,
+	"openshift-monitoring":                   true,
+	"openshift-network-operator":             true,
+	"openshift-sdn":                          true,
+	"openshift-ovn-kubernetes":               true,
+	"openshift-operator-lifecycle-manager":   true,
+	"openshift-operators":                    true,
+	"openshift-cluster-version":              true,
+	"openshift-ingress":                      true,
+	"openshift-dns":                          true,
+	"openshift-image-registry":               true,
+	"openshift-authentication":               true,
+	"openshift-oauth-apiserver":              true,
+	"kube-system":                            true,
 	"openshift-cluster-node-tuning-operator": true,
 	"openshift-cluster-storage-operator":     true,
 	"openshift-multus":                       true,
 }
 
 func init() {
-	validator.Register(&SecurityValidator{})
+	_ = validator.Register(&SecurityValidator{})
 }
 
 // SecurityValidator checks security configuration.
@@ -131,12 +131,13 @@ func (v *SecurityValidator) checkClusterAdminBindings(ctx context.Context, c cli
 
 			// Check if it's binding to non-system subjects
 			for _, subject := range crb.Subjects {
-				if subject.Kind == "ServiceAccount" {
+				switch subject.Kind {
+				case "ServiceAccount":
 					if !systemNamespaces[subject.Namespace] {
 						nonSystemClusterAdminBindings = append(nonSystemClusterAdminBindings,
 							fmt.Sprintf("%s (SA: %s/%s)", crb.Name, subject.Namespace, subject.Name))
 					}
-				} else if subject.Kind == "User" || subject.Kind == "Group" {
+				case "User", "Group":
 					// Users and groups with cluster-admin
 					if !strings.HasPrefix(subject.Name, "system:") {
 						nonSystemClusterAdminBindings = append(nonSystemClusterAdminBindings,

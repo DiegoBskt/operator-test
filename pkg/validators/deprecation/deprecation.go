@@ -38,62 +38,16 @@ const (
 	validatorCategory    = "Compatibility"
 )
 
-// Define deprecated API patterns
-type deprecatedAPI struct {
-	Group        string
-	Version      string
-	Kind         string
-	RemovedIn    string
-	Alternative  string
-	Description  string
-}
-
-// Known deprecated APIs
-var deprecatedAPIs = []deprecatedAPI{
-	{
-		Group:       "extensions",
-		Version:     "v1beta1",
-		Kind:        "Ingress",
-		RemovedIn:   "1.22",
-		Alternative: "networking.k8s.io/v1 Ingress",
-		Description: "extensions/v1beta1 Ingress is deprecated",
-	},
-	{
-		Group:       "networking.k8s.io",
-		Version:     "v1beta1",
-		Kind:        "Ingress",
-		RemovedIn:   "1.22",
-		Alternative: "networking.k8s.io/v1 Ingress",
-		Description: "networking.k8s.io/v1beta1 Ingress is deprecated",
-	},
-	{
-		Group:       "policy",
-		Version:     "v1beta1",
-		Kind:        "PodSecurityPolicy",
-		RemovedIn:   "1.25",
-		Alternative: "Pod Security Admission",
-		Description: "PodSecurityPolicy is deprecated and removed in Kubernetes 1.25",
-	},
-	{
-		Group:       "batch",
-		Version:     "v1beta1",
-		Kind:        "CronJob",
-		RemovedIn:   "1.25",
-		Alternative: "batch/v1 CronJob",
-		Description: "batch/v1beta1 CronJob is deprecated",
-	},
-	{
-		Group:       "autoscaling",
-		Version:     "v2beta1",
-		Kind:        "HorizontalPodAutoscaler",
-		RemovedIn:   "1.25",
-		Alternative: "autoscaling/v2 HorizontalPodAutoscaler",
-		Description: "autoscaling/v2beta1 HPA is deprecated",
-	},
-}
+// Deprecated APIs are tracked but checked via server-side warnings or audit logs
+// The following known deprecated APIs were previously tracked:
+// - extensions/v1beta1 Ingress (removed 1.22)
+// - networking.k8s.io/v1beta1 Ingress (removed 1.22)
+// - policy/v1beta1 PodSecurityPolicy (removed 1.25)
+// - batch/v1beta1 CronJob (removed 1.25)
+// - autoscaling/v2beta1 HPA (removed 1.25)
 
 func init() {
-	validator.Register(&DeprecationValidator{})
+	_ = validator.Register(&DeprecationValidator{})
 }
 
 // DeprecationValidator checks for deprecated APIs and features.

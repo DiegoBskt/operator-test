@@ -37,26 +37,26 @@ const (
 
 // List of known supported CSI drivers
 var supportedCSIDrivers = map[string]bool{
-	"ebs.csi.aws.com":                   true,
-	"disk.csi.azure.com":                true,
-	"file.csi.azure.com":                true,
-	"pd.csi.storage.gke.io":             true,
-	"csi.vsphere.vmware.com":            true,
-	"kubernetes.io/aws-ebs":             true,
-	"kubernetes.io/azure-disk":          true,
-	"kubernetes.io/azure-file":          true,
-	"kubernetes.io/gce-pd":              true,
-	"kubernetes.io/vsphere-volume":      true,
-	"cinder.csi.openstack.org":          true,
-	"manila.csi.openstack.org":          true,
-	"odf.csi.ceph.com":                  true,
-	"openshift-storage.rbd.csi.ceph.com": true,
+	"ebs.csi.aws.com":                       true,
+	"disk.csi.azure.com":                    true,
+	"file.csi.azure.com":                    true,
+	"pd.csi.storage.gke.io":                 true,
+	"csi.vsphere.vmware.com":                true,
+	"kubernetes.io/aws-ebs":                 true,
+	"kubernetes.io/azure-disk":              true,
+	"kubernetes.io/azure-file":              true,
+	"kubernetes.io/gce-pd":                  true,
+	"kubernetes.io/vsphere-volume":          true,
+	"cinder.csi.openstack.org":              true,
+	"manila.csi.openstack.org":              true,
+	"odf.csi.ceph.com":                      true,
+	"openshift-storage.rbd.csi.ceph.com":    true,
 	"openshift-storage.cephfs.csi.ceph.com": true,
-	"nfs.csi.k8s.io":                    true,
+	"nfs.csi.k8s.io":                        true,
 }
 
 func init() {
-	validator.Register(&StorageValidator{})
+	_ = validator.Register(&StorageValidator{})
 }
 
 // StorageValidator checks storage configuration.

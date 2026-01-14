@@ -35,7 +35,7 @@ const (
 )
 
 func init() {
-	validator.Register(&APIServerValidator{})
+	_ = validator.Register(&APIServerValidator{})
 }
 
 // APIServerValidator checks API server and etcd configuration.

@@ -36,7 +36,7 @@ const (
 )
 
 func init() {
-	validator.Register(&MachineConfigValidator{})
+	_ = validator.Register(&MachineConfigValidator{})
 }
 
 // MachineConfigValidator checks MachineConfig and MachineConfigPool configurations.

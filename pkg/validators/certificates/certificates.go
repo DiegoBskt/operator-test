@@ -36,7 +36,7 @@ const (
 )
 
 func init() {
-	validator.Register(&CertificatesValidator{})
+	_ = validator.Register(&CertificatesValidator{})
 }
 
 // CertificatesValidator checks certificate expiration.

@@ -37,7 +37,7 @@ const (
 )
 
 func init() {
-	validator.Register(&VersionValidator{})
+	_ = validator.Register(&VersionValidator{})
 }
 
 // VersionValidator checks OpenShift version and lifecycle status.
