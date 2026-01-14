@@ -215,17 +215,35 @@ make run
 | `make bundle-build-local` | Build bundle for local architecture |
 | `make bundle-push` | Push single-arch bundle |
 | `make bundle-buildx` | Build + push **multi-arch** bundle (amd64/arm64) |
+| `make catalog-build` | Build catalog image (requires `opm`) |
+| `make catalog-push` | Push catalog image |
 | `make scorecard` | Run OLM scorecard tests |
 | `make preflight` | Run Red Hat Preflight checks (containerized) |
 
-### Deploy via OLM (Subscription + CSV)
+### Deploy via OLM
 
-**1. Build and push the bundle:**
+**Option 1: Quick Deploy (Recommended for Testing)**
 ```bash
-make bundle-buildx BUNDLE_IMG=ghcr.io/diegobskt/cluster-assessment-operator-bundle:v1.0.0
+# Build and push the bundle
+make bundle-buildx
+
+# Deploy via operator-sdk (handles all OLM setup automatically)
+make deploy-olm
+
+# To uninstall
+make cleanup-olm
 ```
 
-**2. Create a CatalogSource:**
+**Option 2: Manual CatalogSource (Production)**
+
+1. Build and push the bundle and catalog:
+```bash
+make bundle-buildx
+make catalog-build
+make catalog-push
+```
+
+2. Create a CatalogSource pointing to the **catalog** image (not bundle):
 ```yaml
 apiVersion: operators.coreos.com/v1alpha1
 kind: CatalogSource
@@ -234,12 +252,12 @@ metadata:
   namespace: openshift-marketplace
 spec:
   sourceType: grpc
-  image: ghcr.io/diegobskt/cluster-assessment-operator-bundle:v1.0.0
+  image: ghcr.io/diegobskt/cluster-assessment-operator-catalog:v1.0.0
   displayName: Cluster Assessment Operator
   publisher: Community
 ```
 
-**3. Create a Subscription:**
+3. Create a Subscription:
 ```yaml
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -254,7 +272,7 @@ spec:
   installPlanApproval: Automatic
 ```
 
-**4. Verify installation:**
+4. Verify installation:
 ```bash
 oc get csv -n openshift-operators | grep cluster-assessment
 oc get pods -n openshift-operators | grep cluster-assessment

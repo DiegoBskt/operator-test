@@ -130,6 +130,41 @@ bundle-buildx: ## Build and push multi-arch bundle (amd64 + arm64).
 	podman build --platform linux/arm64 -f bundle.Dockerfile --manifest $(BUNDLE_IMG) .
 	podman manifest push --all $(BUNDLE_IMG)
 
+CATALOG_IMG ?= ghcr.io/diegobskt/cluster-assessment-operator-catalog:v1.0.0
+
+.PHONY: catalog-build
+catalog-build: ## Build the catalog image for amd64 (OpenShift default).
+	opm index add --bundles $(BUNDLE_IMG) --generate --out-dockerfile catalog.Dockerfile --container-tool podman
+	podman build --platform linux/amd64 -f catalog.Dockerfile -t $(CATALOG_IMG) .
+	rm -f catalog.Dockerfile
+
+.PHONY: catalog-build-local
+catalog-build-local: ## Build the catalog image for local architecture.
+	opm index add --bundles $(BUNDLE_IMG) --tag $(CATALOG_IMG) --container-tool podman
+
+.PHONY: catalog-push
+catalog-push: ## Push the catalog image.
+	podman push $(CATALOG_IMG)
+
+.PHONY: catalog-buildx
+catalog-buildx: ## Build and push multi-arch catalog (amd64 + arm64).
+	opm index add --bundles $(BUNDLE_IMG) --generate --out-dockerfile catalog.Dockerfile --container-tool podman
+	-podman rmi $(CATALOG_IMG) 2>/dev/null || true
+	-podman manifest rm $(CATALOG_IMG) 2>/dev/null || true
+	podman manifest create $(CATALOG_IMG)
+	podman build --platform linux/amd64 -f catalog.Dockerfile --manifest $(CATALOG_IMG) .
+	podman build --platform linux/arm64 -f catalog.Dockerfile --manifest $(CATALOG_IMG) .
+	podman manifest push --all $(CATALOG_IMG)
+	rm -f catalog.Dockerfile
+
+.PHONY: deploy-olm
+deploy-olm: ## Deploy the operator via OLM using operator-sdk.
+	operator-sdk run bundle $(BUNDLE_IMG)
+
+.PHONY: cleanup-olm
+cleanup-olm: ## Remove the operator installed via OLM.
+	operator-sdk cleanup cluster-assessment-operator
+
 .PHONY: scorecard
 scorecard: ## Run operator-sdk scorecard tests.
 	operator-sdk scorecard bundle --selector=suite=basic
