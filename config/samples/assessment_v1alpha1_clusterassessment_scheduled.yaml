@@ -1,0 +1,26 @@
+---
+# Scheduled weekly cluster assessment
+apiVersion: assessment.openshift.io/v1alpha1
+kind: ClusterAssessment
+metadata:
+  name: weekly-assessment
+spec:
+  # Run every Sunday at 2:00 AM
+  schedule: "0 2 * * 0"
+
+  # Use production baseline profile
+  profile: production
+
+  # Store report in ConfigMap
+  reportStorage:
+    configMap:
+      enabled: true
+      name: weekly-assessment-report
+
+    # Optional: Export to Git repository
+    # git:
+    #   enabled: true
+    #   url: https://github.com/organization/cluster-reports.git
+    #   branch: main
+    #   path: clusters/production
+    #   secretRef: git-credentials

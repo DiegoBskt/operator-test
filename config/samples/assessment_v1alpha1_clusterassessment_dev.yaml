@@ -1,0 +1,18 @@
+---
+# Development environment assessment with relaxed checks
+apiVersion: assessment.openshift.io/v1alpha1
+kind: ClusterAssessment
+metadata:
+  name: dev-assessment
+spec:
+  profile: development
+
+  # Only run specific validators
+  validators:
+    - version
+    - nodes
+    - security
+
+  reportStorage:
+    configMap:
+      enabled: true

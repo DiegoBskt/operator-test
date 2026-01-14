@@ -1,0 +1,15 @@
+---
+# One-time cluster assessment using production profile
+apiVersion: assessment.openshift.io/v1alpha1
+kind: ClusterAssessment
+metadata:
+  name: production-assessment
+spec:
+  # Use production baseline profile (stricter checks)
+  profile: production
+
+  # Store report in ConfigMap for easy access
+  reportStorage:
+    configMap:
+      enabled: true
+      name: production-assessment-report

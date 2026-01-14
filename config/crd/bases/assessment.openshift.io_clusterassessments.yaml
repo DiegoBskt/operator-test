@@ -1,0 +1,217 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: clusterassessments.assessment.openshift.io
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.14.0
+spec:
+  group: assessment.openshift.io
+  names:
+    kind: ClusterAssessment
+    listKind: ClusterAssessmentList
+    plural: clusterassessments
+    singular: clusterassessment
+    shortNames:
+      - ca
+  scope: Cluster
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Profile
+          type: string
+          jsonPath: .spec.profile
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Pass
+          type: integer
+          jsonPath: .status.summary.passCount
+        - name: Warn
+          type: integer
+          jsonPath: .status.summary.warnCount
+        - name: Fail
+          type: integer
+          jsonPath: .status.summary.failCount
+        - name: Last Run
+          type: date
+          jsonPath: .status.lastRunTime
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      schema:
+        openAPIV3Schema:
+          type: object
+          description: ClusterAssessment triggers read-only assessments of OpenShift cluster configuration.
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              description: ClusterAssessmentSpec defines the desired state of ClusterAssessment.
+              properties:
+                schedule:
+                  type: string
+                  description: Schedule in cron format for periodic assessments. Leave empty for one-time assessment.
+                profile:
+                  type: string
+                  description: Baseline profile to use for assessment.
+                  enum:
+                    - production
+                    - development
+                  default: production
+                validators:
+                  type: array
+                  description: List of specific validators to run. Empty means all validators.
+                  items:
+                    type: string
+                suspend:
+                  type: boolean
+                  description: Suspend prevents scheduled assessments from running.
+                reportStorage:
+                  type: object
+                  description: ReportStorage configures where assessment reports are stored.
+                  properties:
+                    configMap:
+                      type: object
+                      properties:
+                        enabled:
+                          type: boolean
+                        name:
+                          type: string
+                    git:
+                      type: object
+                      properties:
+                        enabled:
+                          type: boolean
+                        url:
+                          type: string
+                        branch:
+                          type: string
+                        path:
+                          type: string
+                        secretRef:
+                          type: string
+            status:
+              type: object
+              description: ClusterAssessmentStatus defines the observed state of ClusterAssessment.
+              properties:
+                phase:
+                  type: string
+                  enum:
+                    - Pending
+                    - Running
+                    - Completed
+                    - Failed
+                lastRunTime:
+                  type: string
+                  format: date-time
+                nextRunTime:
+                  type: string
+                  format: date-time
+                clusterInfo:
+                  type: object
+                  properties:
+                    clusterID:
+                      type: string
+                    clusterVersion:
+                      type: string
+                    platform:
+                      type: string
+                    channel:
+                      type: string
+                    nodeCount:
+                      type: integer
+                    controlPlaneNodes:
+                      type: integer
+                    workerNodes:
+                      type: integer
+                summary:
+                  type: object
+                  properties:
+                    totalChecks:
+                      type: integer
+                    passCount:
+                      type: integer
+                    warnCount:
+                      type: integer
+                    failCount:
+                      type: integer
+                    infoCount:
+                      type: integer
+                    score:
+                      type: integer
+                    profileUsed:
+                      type: string
+                findings:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      validator:
+                        type: string
+                      category:
+                        type: string
+                      resource:
+                        type: string
+                      namespace:
+                        type: string
+                      status:
+                        type: string
+                        enum:
+                          - PASS
+                          - WARN
+                          - FAIL
+                          - INFO
+                      title:
+                        type: string
+                      description:
+                        type: string
+                      impact:
+                        type: string
+                      recommendation:
+                        type: string
+                      references:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                      - id
+                      - validator
+                      - category
+                      - status
+                      - title
+                      - description
+                reportConfigMap:
+                  type: string
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                    required:
+                      - type
+                      - status
+                message:
+                  type: string
