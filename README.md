@@ -184,8 +184,15 @@ cluster_assessment_duration_seconds{assessment_name="my-assessment"}
 | `make test` | Run unit tests |
 | `make test-coverage` | Run tests with coverage report |
 | `make lint` | Run golangci-lint |
-| `make podman-build` | Build container for amd64 |
-| `make podman-buildx` | Build + push multi-arch (amd64/arm64) |
+
+### Container Build Commands
+
+| Command | Description |
+|---------|-------------|
+| `make podman-build` | Build container for **amd64** (OpenShift default) |
+| `make podman-build-local` | Build container for local architecture |
+| `make podman-push` | Push single-arch image |
+| `make podman-buildx` | Build + push **multi-arch** manifest (amd64/arm64) |
 
 ### Run Locally
 
@@ -201,11 +208,56 @@ make run
 
 ### Bundle Commands
 
+| Command | Description |
+|---------|-------------|
+| `make bundle` | Generate OLM bundle manifests |
+| `make bundle-build` | Build bundle image for **amd64** |
+| `make bundle-build-local` | Build bundle for local architecture |
+| `make bundle-push` | Push single-arch bundle |
+| `make bundle-buildx` | Build + push **multi-arch** bundle (amd64/arm64) |
+| `make scorecard` | Run OLM scorecard tests |
+| `make preflight` | Run Red Hat Preflight checks (containerized) |
+
+### Deploy via OLM (Subscription + CSV)
+
+**1. Build and push the bundle:**
 ```bash
-make bundle          # Generate OLM bundle
-make bundle-build    # Build bundle image
-make scorecard       # Run OLM scorecard tests
-make preflight       # Run Red Hat Preflight checks
+make bundle-buildx BUNDLE_IMG=ghcr.io/diegobskt/cluster-assessment-operator-bundle:v1.0.0
+```
+
+**2. Create a CatalogSource:**
+```yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: cluster-assessment-catalog
+  namespace: openshift-marketplace
+spec:
+  sourceType: grpc
+  image: ghcr.io/diegobskt/cluster-assessment-operator-bundle:v1.0.0
+  displayName: Cluster Assessment Operator
+  publisher: Community
+```
+
+**3. Create a Subscription:**
+```yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: cluster-assessment-operator
+  namespace: openshift-operators
+spec:
+  channel: stable
+  name: cluster-assessment-operator
+  source: cluster-assessment-catalog
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
+```
+
+**4. Verify installation:**
+```bash
+oc get csv -n openshift-operators | grep cluster-assessment
+oc get pods -n openshift-operators | grep cluster-assessment
 ```
 
 ### Red Hat Certification Status

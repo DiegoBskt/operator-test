@@ -110,12 +110,25 @@ bundle: release-manifests ## Generate bundle for OLM.
 BUNDLE_IMG ?= ghcr.io/diegobskt/cluster-assessment-operator-bundle:v1.0.0
 
 .PHONY: bundle-build
-bundle-build: ## Build the bundle image.
+bundle-build: ## Build the bundle image for amd64.
+	podman build --platform linux/amd64 -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+
+.PHONY: bundle-build-local
+bundle-build-local: ## Build the bundle image for local architecture.
 	podman build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
 
 .PHONY: bundle-push
 bundle-push: ## Push the bundle image.
 	podman push $(BUNDLE_IMG)
+
+.PHONY: bundle-buildx
+bundle-buildx: ## Build and push multi-arch bundle (amd64 + arm64).
+	-podman rmi $(BUNDLE_IMG) 2>/dev/null || true
+	-podman manifest rm $(BUNDLE_IMG) 2>/dev/null || true
+	podman manifest create $(BUNDLE_IMG)
+	podman build --platform linux/amd64 -f bundle.Dockerfile --manifest $(BUNDLE_IMG) .
+	podman build --platform linux/arm64 -f bundle.Dockerfile --manifest $(BUNDLE_IMG) .
+	podman manifest push --all $(BUNDLE_IMG)
 
 .PHONY: scorecard
 scorecard: ## Run operator-sdk scorecard tests.
