@@ -11,9 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions CI/CD workflows
 - Dependabot configuration for dependency updates
 - CONTRIBUTING.md guidelines
+- **File Based Catalog (FBC)** support for OCP v4.12-v4.20
+- Three OLM channels: `stable-v1`, `candidate-v1`, `fast-v1`
+- FBC validation in CI workflow
+- Catalog image auto-build on release
+- Auto-generated PR for FBC catalog updates
 
 ### Changed
 - ConfigMap report names now include timestamp to prevent overwriting
+- Updated channel naming per [OLM best practices](https://olm.operatorframework.io/docs/best-practices/channel-naming/)
+- operator-sdk version updated to v1.42.0
 
 ### Fixed
 - Race condition in status updates with RetryOnConflict

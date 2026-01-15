@@ -4,9 +4,9 @@ This document describes how to upgrade the Cluster Assessment Operator to newer 
 
 ## Version Compatibility
 
-| Operator Version | OpenShift Versions | Breaking Changes |
-|-----------------|-------------------|------------------|
-| 1.0.0 | 4.12 - 4.16 | Initial release |
+| Operator Version | OpenShift Versions | Channels | Breaking Changes |
+|-----------------|-------------------|----------|------------------|
+| 1.0.0 | 4.12 - 4.20 | stable-v1, candidate-v1, fast-v1 | Initial release |
 
 ---
 
@@ -18,14 +18,19 @@ If installed via OLM, upgrades are automatic based on your subscription settings
 
 ```bash
 # Check current version
-oc get csv -n openshift-cluster-assessment | grep cluster-assessment
+oc get csv -n openshift-operators | grep cluster-assessment
 
-# Check subscription approval setting
-oc get subscription cluster-assessment-operator -n openshift-cluster-assessment -o jsonpath='{.spec.installPlanApproval}'
+# Check subscription channel and approval
+oc get subscription cluster-assessment-operator -n openshift-operators \
+  -o jsonpath='channel: {.spec.channel}, approval: {.spec.installPlanApproval}'
 ```
 
-**Automatic:** Upgrades install automatically  
-**Manual:** Approve each upgrade manually
+**Channels:**
+- `stable-v1` - Production-ready (recommended)
+- `candidate-v1` - Pre-release/testing
+- `fast-v1` - Early adopter access
+
+**Approval:** `Automatic` (auto-upgrade) or `Manual` (approve each)
 
 ### Method 2: Manual Upgrade
 
