@@ -1,0 +1,32 @@
+[
+    {
+        "type": "console.navigation/href",
+        "properties": {
+            "id": "cluster-assessment",
+            "perspective": "admin",
+            "section": "observe",
+            "name": "%plugin__cluster-assessment-plugin~Cluster Assessment%",
+            "href": "/cluster-assessment"
+        }
+    },
+    {
+        "type": "console.page/route",
+        "properties": {
+            "exact": true,
+            "path": "/cluster-assessment",
+            "component": {
+                "$codeRef": "AssessmentDashboard"
+            }
+        }
+    },
+    {
+        "type": "console.page/route",
+        "properties": {
+            "exact": false,
+            "path": "/cluster-assessment/:name",
+            "component": {
+                "$codeRef": "AssessmentDetails"
+            }
+        }
+    }
+]

@@ -1,0 +1,62 @@
+/* Cluster Assessment Plugin Styles */
+/* Prefix all classes with ca-plugin__ to avoid collisions */
+
+.ca-plugin__summary-card {
+  height: 100%;
+}
+
+.ca-plugin__summary-card .pf-v5-c-card__body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.ca-plugin__score-gauge {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ca-plugin__score-gauge svg {
+  max-width: 200px;
+}
+
+.ca-plugin__findings-toolbar {
+  margin-bottom: var(--pf-v5-global--spacer--md);
+}
+
+.ca-plugin__status-icon {
+  margin-right: var(--pf-v5-global--spacer--sm);
+}
+
+.ca-plugin__expandable-content {
+  padding: var(--pf-v5-global--spacer--lg);
+  background-color: var(--pf-v5-global--BackgroundColor--200);
+}
+
+.ca-plugin__expandable-content h4 {
+  margin-top: var(--pf-v5-global--spacer--md);
+  margin-bottom: var(--pf-v5-global--spacer--sm);
+}
+
+.ca-plugin__expandable-content h4:first-child {
+  margin-top: 0;
+}
+
+.ca-plugin__reference-link {
+  display: block;
+  margin-bottom: var(--pf-v5-global--spacer--xs);
+}
+
+/* Score colors */
+.ca-plugin__score--good {
+  color: var(--pf-v5-global--success-color--100);
+}
+
+.ca-plugin__score--warning {
+  color: var(--pf-v5-global--warning-color--100);
+}
+
+.ca-plugin__score--critical {
+  color: var(--pf-v5-global--danger-color--100);
+}

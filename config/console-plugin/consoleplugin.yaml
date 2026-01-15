@@ -1,0 +1,21 @@
+apiVersion: console.openshift.io/v1
+kind: ConsolePlugin
+metadata:
+  name: cluster-assessment-plugin
+spec:
+  displayName: Cluster Assessment
+  backend:
+    type: Service
+    service:
+      name: cluster-assessment-plugin
+      namespace: cluster-assessment-operator
+      port: 9001
+      basePath: /
+  proxy:
+    - alias: api
+      endpoint:
+        type: Service
+        service:
+          name: cluster-assessment-operator
+          namespace: cluster-assessment-operator
+          port: 8080
