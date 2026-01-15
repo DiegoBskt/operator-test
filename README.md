@@ -255,8 +255,10 @@ make catalog-build-single OCP_VERSION=v4.14
 podman push ghcr.io/diegobskt/cluster-assessment-operator-catalog:v4.14
 ```
 
-2. Create CatalogSource:
-```yaml
+2. Deploy the operator (single command):
+```bash
+oc apply -f - <<EOF
+---
 apiVersion: operators.coreos.com/v1alpha1
 kind: CatalogSource
 metadata:
@@ -264,28 +266,38 @@ metadata:
   namespace: openshift-marketplace
 spec:
   sourceType: grpc
-  image: ghcr.io/diegobskt/cluster-assessment-operator-catalog:v4.14
+  image: ghcr.io/diegobskt/cluster-assessment-operator-catalog:v4.20
   displayName: Cluster Assessment Operator
   publisher: Community
-```
-
-3. Create Subscription:
-```yaml
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-cluster-assessment
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: cluster-assessment-operator
+  namespace: openshift-cluster-assessment
+spec: {}  # AllNamespaces install mode
+---
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
   name: cluster-assessment-operator
-  namespace: openshift-operators
+  namespace: openshift-cluster-assessment
 spec:
   channel: stable-v1
   name: cluster-assessment-operator
   source: cluster-assessment-catalog
   sourceNamespace: openshift-marketplace
+EOF
 ```
 
-4. Verify:
+3. Verify:
 ```bash
-oc get csv -n openshift-operators | grep cluster-assessment
+oc get csv -n openshift-cluster-assessment | grep cluster-assessment
 ```
 
 ### Red Hat Certification Status
