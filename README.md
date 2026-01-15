@@ -17,7 +17,7 @@ The Cluster Assessment Operator is designed for consulting engagements where cus
 | Feature | Description |
 |---------|-------------|
 | 🔍 **Read-only** | No automatic remediation or configuration changes |
-| 📊 **12 Validators** | Comprehensive checks across platform, security, networking, storage |
+| 📊 **18 Validators** | Comprehensive checks across platform, security, networking, storage, governance |
 | 📄 **Multiple Formats** | JSON, HTML, and PDF report output |
 | ⏰ **Scheduling** | On-demand or cron-based assessments |
 | 📈 **Prometheus Metrics** | Export scores and findings for alerting |
@@ -92,6 +92,12 @@ open report.html
 | `storage` | Storage | StorageClasses, default SC, CSI drivers |
 | `monitoring` | Observability | Cluster monitoring, user workload monitoring |
 | `deprecation` | Compatibility | Deprecated patterns, missing probes |
+| `imageregistry` | Platform | Registry config, storage backend, pruning, replicas |
+| `compliance` | Security | Pod Security Admission, OAuth, kubeadmin user |
+| `resourcequotas` | Governance | ResourceQuota coverage, utilization, LimitRanges |
+| `logging` | Observability | ClusterLogging operator, log forwarding, collector health |
+| `costoptimization` | Infrastructure | Orphan PVCs, idle deployments, resource specifications |
+| `networkpolicyaudit` | Networking | Policy coverage, allow-all detection, default deny |
 
 ---
 

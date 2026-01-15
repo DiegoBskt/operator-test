@@ -24,7 +24,7 @@ metadata:
     # OLM Best Practices annotations
     capabilities: Basic Install
     categories: Monitoring,Developer Tools
-    containerImage: ghcr.io/diegobskt/cluster-assessment-operator:v1.0.0
+    containerImage: ghcr.io/diegobskt/cluster-assessment-operator:v1.1.0
     createdAt: "2026-01-15T00:00:00Z"
     description: Read-only OpenShift cluster configuration assessment operator
     operators.operatorframework.io/builder: operator-sdk-v1.34.0
@@ -33,14 +33,13 @@ metadata:
     support: Community
     # Upgrade path configuration per OLM best practices:
     # - skipRange allows direct upgrades from older versions to this version
-    # - For v1.0.0 (initial release), no skipRange needed
-    # - For v1.0.1+, use: olm.skipRange: ">=1.0.0 <1.0.1"
+    olm.skipRange: ">=1.0.0 <1.1.0"
     # Multi-arch support annotations
     operatorframework.io/suggested-namespace: cluster-assessment-operator
     operatorframework.io/arch.amd64: supported
     operatorframework.io/arch.arm64: supported
     operatorframework.io/os.linux: supported
-  name: cluster-assessment-operator.v1.0.0
+  name: cluster-assessment-operator.v1.1.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -108,7 +107,7 @@ spec:
 
     ### Features
 
-    - **12 Validators**: Checks for version, nodes, security, networking, storage, operators, certificates, etcd backup, and more
+    - **18 Validators**: Checks for version, nodes, security, compliance, networking, storage, operators, certificates, logging, etcd backup, resource quotas, cost optimization, and more
     - **Multiple Report Formats**: JSON, HTML, and PDF output
     - **Baseline Profiles**: Production (strict) and Development (relaxed) thresholds
     - **Scheduled Assessments**: On-demand or cron-based scheduling
@@ -342,7 +341,7 @@ spec:
               spec:
                 containers:
                   - name: manager
-                    image: ghcr.io/diegobskt/cluster-assessment-operator:v1.0.0
+                    image: ghcr.io/diegobskt/cluster-assessment-operator:v1.1.0
                     imagePullPolicy: IfNotPresent
                     command:
                       - /manager
@@ -416,6 +415,6 @@ spec:
   provider:
     name: Community
     url: https://github.com/diegobskt/cluster-assessment-operator
-  version: 1.0.0
-  # Replaces field - required for upgrade graph (uncomment for v1.0.1+)
-  # replaces: cluster-assessment-operator.v0.9.0
+  version: 1.1.0
+  # Replaces field - required for upgrade graph
+  replaces: cluster-assessment-operator.v1.0.0

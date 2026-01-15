@@ -7,24 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-01-15
+
 ### Added
-- GitHub Actions CI/CD workflows
-- Dependabot configuration for dependency updates
-- CONTRIBUTING.md guidelines
-- **File Based Catalog (FBC)** support for OCP v4.12-v4.20
-- Three OLM channels: `stable-v1`, `candidate-v1`, `fast-v1`
-- FBC validation in CI workflow
-- Catalog image auto-build on release
-- Auto-generated PR for FBC catalog updates
+- **6 New Validators** (total now 18):
+  - `imageregistry` - Registry configuration, storage backend, pruning, replicas
+  - `compliance` - Pod Security Admission, OAuth providers, kubeadmin user
+  - `resourcequotas` - ResourceQuota coverage, utilization, LimitRanges
+  - `logging` - ClusterLogging operator, log forwarding, collector health
+  - `costoptimization` - Orphan PVCs, idle deployments, resource specifications
+  - `networkpolicyaudit` - Policy coverage, allow-all detection, default deny
+- New **Governance** category for resource management validators
 
 ### Changed
-- ConfigMap report names now include timestamp to prevent overwriting
-- Updated channel naming per [OLM best practices](https://olm.operatorframework.io/docs/best-practices/channel-naming/)
-- operator-sdk version updated to v1.42.0
-
-### Fixed
-- Race condition in status updates with RetryOnConflict
-- Stuck assessment recovery with timeout mechanism
+- Validators are now organized alphabetically in main.go imports
 
 ## [1.0.0] - 2026-01-14
 
@@ -70,7 +66,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 1.1.0 | 2026-01-15 | 6 new validators (18 total) |
 | 1.0.0 | 2026-01-14 | Initial release |
 
-[Unreleased]: https://github.com/diegobskt/cluster-assessment-operator/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/diegobskt/cluster-assessment-operator/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/diegobskt/cluster-assessment-operator/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/diegobskt/cluster-assessment-operator/releases/tag/v1.0.0
+
