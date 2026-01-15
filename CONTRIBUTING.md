@@ -36,7 +36,8 @@ This project adheres to a code of conduct. By participating, you are expected to
 - Go 1.25+
 - Podman or Docker
 - Access to an OpenShift 4.12+ cluster (for testing)
-- operator-sdk v1.34.0+ (for OLM testing)
+- operator-sdk v1.42.0+ (for OLM bundle validation)
+- opm v1.36.0+ (for FBC catalog management)
 
 ### Getting Started
 
@@ -165,6 +166,20 @@ Releases are automated via GitHub Actions. To create a release:
    git tag v1.x.x
    git push origin v1.x.x
    ```
+
+This triggers:
+- Multi-arch operator + bundle image builds
+- FBC catalog images for OCP v4.12-v4.20
+- GitHub Release with install.yaml
+- Auto-generated PR to update FBC catalogs
+
+### FBC Catalog Validation
+
+Before release, validate catalogs locally:
+```bash
+make catalog-validate
+operator-sdk bundle validate ./bundle --select-optional suite=operatorframework
+```
 
 ## Questions?
 
