@@ -206,44 +206,56 @@ make run
 
 ## 📋 OLM / OperatorHub
 
+This operator uses **File Based Catalog (FBC)** format following [OLM best practices](https://olm.operatorframework.io/docs/best-practices/).
+
+### Channels
+
+| Channel | Purpose | Users |
+|---------|---------|-------|
+| `stable-v1` | Production-ready, officially supported | Most users |
+| `candidate-v1` | Pre-release, may become stable | Testing |
+| `fast-v1` | Latest features, early access | Early adopters |
+
 ### Bundle Commands
 
 | Command | Description |
 |---------|-------------|
 | `make bundle` | Generate OLM bundle manifests |
-| `make bundle-build` | Build bundle image for **amd64** |
 | `make bundle-build-local` | Build bundle for local architecture |
-| `make bundle-push` | Push single-arch bundle |
 | `make bundle-buildx` | Build + push **multi-arch** bundle (amd64/arm64) |
-| `make catalog-build` | Build catalog image (requires `opm`) |
-| `make catalog-push` | Push catalog image |
+
+### FBC Catalog Commands
+
+| Command | Description |
+|---------|-------------|
+| `make catalog-validate` | Validate all FBC catalogs (v4.12-v4.20) |
+| `make catalog-build-single OCP_VERSION=v4.14` | Build catalog for specific OCP version |
+| `make catalog-build` | Build catalog images for all OCP versions |
+| `make catalog-push` | Push all catalog images |
 | `make scorecard` | Run OLM scorecard tests |
-| `make preflight` | Run Red Hat Preflight checks (containerized) |
+| `make preflight` | Run Red Hat Preflight checks |
 
 ### Deploy via OLM
 
-**Option 1: Quick Deploy (Recommended for Testing)**
+**Option 1: Quick Deploy (Testing)**
 ```bash
-# Build and push the bundle
 make bundle-buildx
-
-# Deploy via operator-sdk (handles all OLM setup automatically)
 make deploy-olm
 
 # To uninstall
 make cleanup-olm
 ```
 
-**Option 2: Manual CatalogSource (Production)**
+**Option 2: CatalogSource (Production)**
 
-1. Build and push the bundle and catalog:
+1. Build and push catalog:
 ```bash
 make bundle-buildx
-make catalog-build
-make catalog-push
+make catalog-build-single OCP_VERSION=v4.14
+podman push ghcr.io/diegobskt/cluster-assessment-operator-catalog:v4.14
 ```
 
-2. Create a CatalogSource pointing to the **catalog** image (not bundle):
+2. Create CatalogSource:
 ```yaml
 apiVersion: operators.coreos.com/v1alpha1
 kind: CatalogSource
@@ -252,12 +264,12 @@ metadata:
   namespace: openshift-marketplace
 spec:
   sourceType: grpc
-  image: ghcr.io/diegobskt/cluster-assessment-operator-catalog:v1.0.0
+  image: ghcr.io/diegobskt/cluster-assessment-operator-catalog:v4.14
   displayName: Cluster Assessment Operator
   publisher: Community
 ```
 
-3. Create a Subscription:
+3. Create Subscription:
 ```yaml
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -265,17 +277,15 @@ metadata:
   name: cluster-assessment-operator
   namespace: openshift-operators
 spec:
-  channel: stable
+  channel: stable-v1
   name: cluster-assessment-operator
   source: cluster-assessment-catalog
   sourceNamespace: openshift-marketplace
-  installPlanApproval: Automatic
 ```
 
-4. Verify installation:
+4. Verify:
 ```bash
 oc get csv -n openshift-operators | grep cluster-assessment
-oc get pods -n openshift-operators | grep cluster-assessment
 ```
 
 ### Red Hat Certification Status
@@ -288,6 +298,7 @@ oc get pods -n openshift-operators | grep cluster-assessment
 | Non-root execution | ✅ USER 65532 |
 | Scorecard tests | ✅ All passing |
 | Multi-arch | ✅ amd64 + arm64 |
+| FBC catalogs | ✅ v4.12-v4.20 |
 
 ---
 
@@ -348,24 +359,25 @@ This project uses GitHub Actions for automation:
 
 | Workflow | Trigger | Description |
 |----------|---------|-------------|
-| **CI** | Push/PR to main | Lint, test, build, validate bundle |
-| **Release** | Tag `v*` | Build multi-arch images, create GitHub release |
+| **CI** | Push/PR to main | Lint, test, build, validate bundle & FBC catalogs |
+| **Release** | Tag `v*` | Build multi-arch images, catalog images (v4.12-v4.20), create release |
+| **FBC Auto-Update** | Tag `v*` | Update FBC catalogs and create PR |
 | **Scorecard** | Bundle changes | OLM scorecard and bundle validation |
 | **Dependabot** | Weekly | Automated dependency updates |
 
 ### Creating a Release
 
 ```bash
-# Update CHANGELOG.md with new version notes
-# Then create and push a tag
+# Update CHANGELOG.md
 git tag v1.1.0
 git push origin v1.1.0
 ```
 
-This triggers the release workflow which:
-1. Builds multi-arch images (amd64 + arm64)
-2. Pushes to GitHub Container Registry
-3. Creates a GitHub Release with install.yaml
+This triggers:
+1. Builds multi-arch operator + bundle images
+2. Builds catalog images for OCP v4.12-v4.20
+3. Creates GitHub Release with install.yaml
+4. Creates PR to update FBC catalogs
 
 ---
 
