@@ -18,6 +18,7 @@ jobs:
       packages: write
     outputs:
       image_name: ${{ steps.lowercase.outputs.image_name }}
+      is_prerelease: ${{ steps.release-type.outputs.is_prerelease }}
 
     steps:
       - uses: actions/checkout@v4
@@ -27,6 +28,18 @@ jobs:
         run: |
           IMAGE_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
+
+      - name: Determine release type
+        id: release-type
+        run: |
+          TAG="${{ github.ref_name }}"
+          if [[ "$TAG" =~ -rc\.[0-9]+$ ]] || [[ "$TAG" =~ -beta\.[0-9]+$ ]] || [[ "$TAG" =~ -alpha\.[0-9]+$ ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+            echo "Release type: PRE-RELEASE (candidate channel only)"
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+            echo "Release type: STABLE (stable + candidate channels)"
+          fi
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -100,6 +113,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           generate_release_notes: true
+          prerelease: ${{ needs.build-and-push.outputs.is_prerelease == 'true' }}
           files: |
             dist/install.yaml
           body: |
@@ -110,7 +124,7 @@ jobs:
             oc apply -f https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/install.yaml
             ```
 
-            ### OLM Install
+            ### OLM Install (Stable Channel)
             ```bash
             # Using the bundle image
             operator-sdk run bundle ${{ env.REGISTRY }}/${{ needs.build-and-push.outputs.image_name }}-bundle:${{ github.ref_name }}
@@ -119,7 +133,8 @@ jobs:
             ## Container Images
             - Operator: `${{ env.REGISTRY }}/${{ needs.build-and-push.outputs.image_name }}:${{ github.ref_name }}`
             - Bundle: `${{ env.REGISTRY }}/${{ needs.build-and-push.outputs.image_name }}-bundle:${{ github.ref_name }}`
-            - Catalog: `${{ env.REGISTRY }}/${{ needs.build-and-push.outputs.image_name }}-catalog:<ocp-version>` (v4.12-v4.20)
+            - Catalog (stable): `${{ env.REGISTRY }}/${{ needs.build-and-push.outputs.image_name }}-catalog:<ocp-version>`
+            - Catalog (candidate): `${{ env.REGISTRY }}/${{ needs.build-and-push.outputs.image_name }}-catalog:<ocp-version>-candidate`
 
   build-catalog-images:
     name: Build and Push Catalog Images
@@ -149,7 +164,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push catalog image
+      - name: Build and push catalog image (candidate channel)
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -160,7 +175,15 @@ jobs:
             OCP_VERSION=${{ matrix.ocp_version }}
             OPERATOR_NAME=cluster-assessment-operator
           tags: |
-            ${{ env.REGISTRY }}/${{ needs.build-and-push.outputs.image_name }}-catalog:${{ matrix.ocp_version }}
+            ${{ env.REGISTRY }}/${{ needs.build-and-push.outputs.image_name }}-catalog:${{ matrix.ocp_version }}-candidate
             ${{ env.REGISTRY }}/${{ needs.build-and-push.outputs.image_name }}-catalog:${{ matrix.ocp_version }}-${{ github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Tag stable channel (stable releases only)
+        if: needs.build-and-push.outputs.is_prerelease == 'false'
+        run: |
+          echo "Tagging stable channel for ${{ matrix.ocp_version }}..."
+          docker buildx imagetools create \
+            --tag ${{ env.REGISTRY }}/${{ needs.build-and-push.outputs.image_name }}-catalog:${{ matrix.ocp_version }} \
+            ${{ env.REGISTRY }}/${{ needs.build-and-push.outputs.image_name }}-catalog:${{ matrix.ocp_version }}-candidate
