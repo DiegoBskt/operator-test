@@ -12,8 +12,6 @@ import {
     EmptyState,
     EmptyStateIcon,
     EmptyStateBody,
-    EmptyStateHeader,
-    EmptyStateFooter,
     Spinner,
     Label,
     Flex,
@@ -70,6 +68,19 @@ export interface ClusterAssessment {
             platform?: string;
             nodeCount?: number;
         };
+        findings?: Array<{
+            id: string;
+            validator: string;
+            category: string;
+            resource?: string;
+            namespace?: string;
+            status: 'PASS' | 'WARN' | 'FAIL' | 'INFO';
+            title: string;
+            description: string;
+            impact?: string;
+            recommendation?: string;
+            references?: string[];
+        }>;
     };
 }
 
@@ -95,10 +106,8 @@ const AssessmentDashboard: React.FC = () => {
             <Page>
                 <PageSection>
                     <EmptyState>
-                        <EmptyStateHeader
-                            titleText="Error loading assessments"
-                            icon={<EmptyStateIcon icon={ExclamationCircleIcon} />}
-                        />
+                        <EmptyStateIcon icon={ExclamationCircleIcon} />
+                        <Title headingLevel="h4" size="lg">Error loading assessments</Title>
                         <EmptyStateBody>{String(error)}</EmptyStateBody>
                     </EmptyState>
                 </PageSection>
@@ -112,7 +121,7 @@ const AssessmentDashboard: React.FC = () => {
                 <PageSection>
                     <EmptyState>
                         <Spinner size="xl" />
-                        <EmptyStateBody>Loading assessments...</EmptyStateBody>
+                        <Title headingLevel="h4" size="lg">Loading assessments...</Title>
                     </EmptyState>
                 </PageSection>
             </Page>
@@ -124,18 +133,14 @@ const AssessmentDashboard: React.FC = () => {
             <Page>
                 <PageSection>
                     <EmptyState>
-                        <EmptyStateHeader
-                            titleText="No assessments found"
-                            icon={<EmptyStateIcon icon={SearchIcon} />}
-                        />
+                        <EmptyStateIcon icon={SearchIcon} />
+                        <Title headingLevel="h4" size="lg">No assessments found</Title>
                         <EmptyStateBody>
                             Create your first cluster assessment to analyze your OpenShift configuration.
                         </EmptyStateBody>
-                        <EmptyStateFooter>
-                            <Button variant="primary" icon={<PlusCircleIcon />}>
-                                Create Assessment
-                            </Button>
-                        </EmptyStateFooter>
+                        <Button variant="primary" icon={<PlusCircleIcon />}>
+                            Create Assessment
+                        </Button>
                     </EmptyState>
                 </PageSection>
             </Page>
@@ -178,7 +183,7 @@ const AssessmentDashboard: React.FC = () => {
                                     <FlexItem>
                                         <Flex spaceItems={{ default: 'spaceItemsSm' }}>
                                             <FlexItem>
-                                                <CheckCircleIcon color="var(--pf-v5-global--success-color--100)" />
+                                                <CheckCircleIcon color="var(--pf-global--success-color--100)" />
                                             </FlexItem>
                                             <FlexItem>Pass: {summary?.passCount ?? 0}</FlexItem>
                                         </Flex>
@@ -186,7 +191,7 @@ const AssessmentDashboard: React.FC = () => {
                                     <FlexItem>
                                         <Flex spaceItems={{ default: 'spaceItemsSm' }}>
                                             <FlexItem>
-                                                <ExclamationTriangleIcon color="var(--pf-v5-global--warning-color--100)" />
+                                                <ExclamationTriangleIcon color="var(--pf-global--warning-color--100)" />
                                             </FlexItem>
                                             <FlexItem>Warn: {summary?.warnCount ?? 0}</FlexItem>
                                         </Flex>
@@ -194,7 +199,7 @@ const AssessmentDashboard: React.FC = () => {
                                     <FlexItem>
                                         <Flex spaceItems={{ default: 'spaceItemsSm' }}>
                                             <FlexItem>
-                                                <ExclamationCircleIcon color="var(--pf-v5-global--danger-color--100)" />
+                                                <ExclamationCircleIcon color="var(--pf-global--danger-color--100)" />
                                             </FlexItem>
                                             <FlexItem>Fail: {summary?.failCount ?? 0}</FlexItem>
                                         </Flex>
@@ -202,7 +207,7 @@ const AssessmentDashboard: React.FC = () => {
                                     <FlexItem>
                                         <Flex spaceItems={{ default: 'spaceItemsSm' }}>
                                             <FlexItem>
-                                                <InfoCircleIcon color="var(--pf-v5-global--info-color--100)" />
+                                                <InfoCircleIcon color="var(--pf-global--info-color--100)" />
                                             </FlexItem>
                                             <FlexItem>Info: {summary?.infoCount ?? 0}</FlexItem>
                                         </Flex>

@@ -9,12 +9,6 @@ interface ScoreGaugeProps {
 }
 
 export const ScoreGauge: React.FC<ScoreGaugeProps> = ({ score }) => {
-    const getColor = (value: number): string => {
-        if (value >= 80) return 'var(--pf-v5-global--success-color--100)';
-        if (value >= 50) return 'var(--pf-v5-global--warning-color--100)';
-        return 'var(--pf-v5-global--danger-color--100)';
-    };
-
     const getStatus = (value: number): string => {
         if (value >= 80) return 'Healthy';
         if (value >= 50) return 'Warning';
@@ -26,7 +20,7 @@ export const ScoreGauge: React.FC<ScoreGaugeProps> = ({ score }) => {
             <ChartDonut
                 ariaDesc="Cluster health score"
                 ariaTitle="Score"
-                constrainToVisibleArea
+                constrainToVisibleArea={true}
                 data={[
                     { x: 'Score', y: score },
                     { x: 'Remaining', y: 100 - score },

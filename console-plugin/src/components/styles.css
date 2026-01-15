@@ -5,7 +5,7 @@
   height: 100%;
 }
 
-.ca-plugin__summary-card .pf-v5-c-card__body {
+.ca-plugin__summary-card .pf-c-card__body {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -22,21 +22,21 @@
 }
 
 .ca-plugin__findings-toolbar {
-  margin-bottom: var(--pf-v5-global--spacer--md);
+  margin-bottom: var(--pf-global--spacer--md);
 }
 
 .ca-plugin__status-icon {
-  margin-right: var(--pf-v5-global--spacer--sm);
+  margin-right: var(--pf-global--spacer--sm);
 }
 
 .ca-plugin__expandable-content {
-  padding: var(--pf-v5-global--spacer--lg);
-  background-color: var(--pf-v5-global--BackgroundColor--200);
+  padding: var(--pf-global--spacer--lg);
+  background-color: var(--pf-global--BackgroundColor--200);
 }
 
 .ca-plugin__expandable-content h4 {
-  margin-top: var(--pf-v5-global--spacer--md);
-  margin-bottom: var(--pf-v5-global--spacer--sm);
+  margin-top: var(--pf-global--spacer--md);
+  margin-bottom: var(--pf-global--spacer--sm);
 }
 
 .ca-plugin__expandable-content h4:first-child {
@@ -45,18 +45,18 @@
 
 .ca-plugin__reference-link {
   display: block;
-  margin-bottom: var(--pf-v5-global--spacer--xs);
+  margin-bottom: var(--pf-global--spacer--xs);
 }
 
 /* Score colors */
 .ca-plugin__score--good {
-  color: var(--pf-v5-global--success-color--100);
+  color: var(--pf-global--success-color--100);
 }
 
 .ca-plugin__score--warning {
-  color: var(--pf-v5-global--warning-color--100);
+  color: var(--pf-global--warning-color--100);
 }
 
 .ca-plugin__score--critical {
-  color: var(--pf-v5-global--danger-color--100);
+  color: var(--pf-global--danger-color--100);
 }

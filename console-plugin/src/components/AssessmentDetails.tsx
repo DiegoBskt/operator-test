@@ -19,7 +19,6 @@ import {
     FlexItem,
     EmptyState,
     EmptyStateBody,
-    EmptyStateHeader,
     EmptyStateIcon,
     Spinner,
     Tabs,
@@ -60,10 +59,8 @@ const AssessmentDetails: React.FC = () => {
             <Page>
                 <PageSection>
                     <EmptyState>
-                        <EmptyStateHeader
-                            titleText="Error loading assessment"
-                            icon={<EmptyStateIcon icon={ExclamationCircleIcon} />}
-                        />
+                        <EmptyStateIcon icon={ExclamationCircleIcon} />
+                        <Title headingLevel="h4" size="lg">Error loading assessment</Title>
                         <EmptyStateBody>{String(error)}</EmptyStateBody>
                     </EmptyState>
                 </PageSection>
@@ -77,7 +74,7 @@ const AssessmentDetails: React.FC = () => {
                 <PageSection>
                     <EmptyState>
                         <Spinner size="xl" />
-                        <EmptyStateBody>Loading assessment...</EmptyStateBody>
+                        <Title headingLevel="h4" size="lg">Loading assessment...</Title>
                     </EmptyState>
                 </PageSection>
             </Page>
@@ -197,13 +194,13 @@ const AssessmentDetails: React.FC = () => {
                                     <FlexItem>
                                         <strong>Total Checks:</strong> {summary?.totalChecks ?? 0}
                                     </FlexItem>
-                                    <FlexItem style={{ color: 'var(--pf-v5-global--success-color--100)' }}>
+                                    <FlexItem style={{ color: 'var(--pf-global--success-color--100)' }}>
                                         <strong>Pass:</strong> {summary?.passCount ?? 0}
                                     </FlexItem>
-                                    <FlexItem style={{ color: 'var(--pf-v5-global--warning-color--100)' }}>
+                                    <FlexItem style={{ color: 'var(--pf-global--warning-color--100)' }}>
                                         <strong>Warn:</strong> {summary?.warnCount ?? 0}
                                     </FlexItem>
-                                    <FlexItem style={{ color: 'var(--pf-v5-global--danger-color--100)' }}>
+                                    <FlexItem style={{ color: 'var(--pf-global--danger-color--100)' }}>
                                         <strong>Fail:</strong> {summary?.failCount ?? 0}
                                     </FlexItem>
                                 </Flex>
@@ -217,7 +214,7 @@ const AssessmentDetails: React.FC = () => {
                             <CardBody>
                                 <Tabs
                                     activeKey={activeTabKey}
-                                    onSelect={(_, tabIndex) => setActiveTabKey(tabIndex)}
+                                    onSelect={(_event, tabIndex) => setActiveTabKey(tabIndex)}
                                 >
                                     <Tab eventKey={0} title={<TabTitleText>All Findings ({findings.length})</TabTitleText>}>
                                         <div style={{ paddingTop: '16px' }}>

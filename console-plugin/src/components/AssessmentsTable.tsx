@@ -1,16 +1,14 @@
 import * as React from 'react';
 import {
     Table,
-    Thead,
-    Tr,
-    Th,
-    Tbody,
-    Td,
+    TableHeader,
+    TableBody,
+    IRow,
+    ICell,
 } from '@patternfly/react-table';
 import {
     Label,
     Button,
-    Timestamp,
 } from '@patternfly/react-core';
 import { Link } from 'react-router-dom';
 import { ClusterAssessment } from './AssessmentDashboard';
@@ -44,18 +42,23 @@ const getProfileLabel = (profile?: string) => {
     }
 };
 
+const formatDate = (dateString?: string) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleString();
+};
+
 export const AssessmentsTable: React.FC<AssessmentsTableProps> = ({ assessments }) => {
-    const columnNames = {
-        name: 'Name',
-        profile: 'Profile',
-        phase: 'Phase',
-        score: 'Score',
-        pass: 'Pass',
-        warn: 'Warn',
-        fail: 'Fail',
-        lastRun: 'Last Run',
-        actions: '',
-    };
+    const columns: ICell[] = [
+        { title: 'Name' },
+        { title: 'Profile' },
+        { title: 'Phase' },
+        { title: 'Score' },
+        { title: 'Pass' },
+        { title: 'Warn' },
+        { title: 'Fail' },
+        { title: 'Last Run' },
+        { title: '' },
+    ];
 
     const sortedAssessments = React.useMemo(() => {
         return [...assessments].sort((a, b) => {
@@ -65,73 +68,59 @@ export const AssessmentsTable: React.FC<AssessmentsTableProps> = ({ assessments 
         });
     }, [assessments]);
 
+    const rows: IRow[] = sortedAssessments.map((assessment) => ({
+        cells: [
+            {
+                title: (
+                    <Link to={`/cluster-assessment/${assessment.metadata.name}`}>
+                        {assessment.metadata.name}
+                    </Link>
+                ),
+            },
+            { title: getProfileLabel(assessment.spec?.profile) },
+            { title: getPhaseLabel(assessment.status?.phase) },
+            { title: assessment.status?.summary?.score ?? '-' },
+            {
+                title: (
+                    <span style={{ color: 'var(--pf-global--success-color--100)' }}>
+                        {assessment.status?.summary?.passCount ?? 0}
+                    </span>
+                ),
+            },
+            {
+                title: (
+                    <span style={{ color: 'var(--pf-global--warning-color--100)' }}>
+                        {assessment.status?.summary?.warnCount ?? 0}
+                    </span>
+                ),
+            },
+            {
+                title: (
+                    <span style={{ color: 'var(--pf-global--danger-color--100)' }}>
+                        {assessment.status?.summary?.failCount ?? 0}
+                    </span>
+                ),
+            },
+            { title: formatDate(assessment.status?.lastRunTime) },
+            {
+                title: (
+                    <Button
+                        variant="link"
+                        component={(props: any) => (
+                            <Link {...props} to={`/cluster-assessment/${assessment.metadata.name}`} />
+                        )}
+                    >
+                        View
+                    </Button>
+                ),
+            },
+        ],
+    }));
+
     return (
-        <Table aria-label="Cluster assessments table">
-            <Thead>
-                <Tr>
-                    <Th>{columnNames.name}</Th>
-                    <Th>{columnNames.profile}</Th>
-                    <Th>{columnNames.phase}</Th>
-                    <Th>{columnNames.score}</Th>
-                    <Th>{columnNames.pass}</Th>
-                    <Th>{columnNames.warn}</Th>
-                    <Th>{columnNames.fail}</Th>
-                    <Th>{columnNames.lastRun}</Th>
-                    <Th>{columnNames.actions}</Th>
-                </Tr>
-            </Thead>
-            <Tbody>
-                {sortedAssessments.map((assessment) => (
-                    <Tr key={assessment.metadata.name}>
-                        <Td dataLabel={columnNames.name}>
-                            <Link to={`/cluster-assessment/${assessment.metadata.name}`}>
-                                {assessment.metadata.name}
-                            </Link>
-                        </Td>
-                        <Td dataLabel={columnNames.profile}>
-                            {getProfileLabel(assessment.spec?.profile)}
-                        </Td>
-                        <Td dataLabel={columnNames.phase}>
-                            {getPhaseLabel(assessment.status?.phase)}
-                        </Td>
-                        <Td dataLabel={columnNames.score}>
-                            {assessment.status?.summary?.score ?? '-'}
-                        </Td>
-                        <Td dataLabel={columnNames.pass}>
-                            <span style={{ color: 'var(--pf-v5-global--success-color--100)' }}>
-                                {assessment.status?.summary?.passCount ?? 0}
-                            </span>
-                        </Td>
-                        <Td dataLabel={columnNames.warn}>
-                            <span style={{ color: 'var(--pf-v5-global--warning-color--100)' }}>
-                                {assessment.status?.summary?.warnCount ?? 0}
-                            </span>
-                        </Td>
-                        <Td dataLabel={columnNames.fail}>
-                            <span style={{ color: 'var(--pf-v5-global--danger-color--100)' }}>
-                                {assessment.status?.summary?.failCount ?? 0}
-                            </span>
-                        </Td>
-                        <Td dataLabel={columnNames.lastRun}>
-                            {assessment.status?.lastRunTime ? (
-                                <Timestamp date={new Date(assessment.status.lastRunTime)} />
-                            ) : (
-                                '-'
-                            )}
-                        </Td>
-                        <Td dataLabel={columnNames.actions}>
-                            <Button
-                                variant="link"
-                                component={(props) => (
-                                    <Link {...props} to={`/cluster-assessment/${assessment.metadata.name}`} />
-                                )}
-                            >
-                                View
-                            </Button>
-                        </Td>
-                    </Tr>
-                ))}
-            </Tbody>
+        <Table aria-label="Cluster assessments table" cells={columns} rows={rows}>
+            <TableHeader />
+            <TableBody />
         </Table>
     );
 };
