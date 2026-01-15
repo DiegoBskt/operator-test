@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cluster-assessment-plugin
+  namespace: cluster-assessment-operator
+  labels:
+    app: cluster-assessment-plugin
+    app.kubernetes.io/name: cluster-assessment-plugin
+    app.kubernetes.io/part-of: cluster-assessment-operator
+  annotations:
+    service.alpha.openshift.io/serving-cert-secret-name: cluster-assessment-plugin-cert
+spec:
+  ports:
+    - name: https
+      port: 9001
+      protocol: TCP
+      targetPort: 9001
+  selector:
+    app: cluster-assessment-plugin
+  type: ClusterIP

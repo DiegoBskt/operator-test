@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cluster-assessment-plugin
+  namespace: cluster-assessment-operator
+  labels:
+    app: cluster-assessment-plugin
+    app.kubernetes.io/name: cluster-assessment-plugin
+    app.kubernetes.io/part-of: cluster-assessment-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cluster-assessment-plugin
+  template:
+    metadata:
+      labels:
+        app: cluster-assessment-plugin
+    spec:
+      containers:
+        - name: plugin
+          image: ghcr.io/diegobskt/cluster-assessment-plugin:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9001
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          volumeMounts:
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
