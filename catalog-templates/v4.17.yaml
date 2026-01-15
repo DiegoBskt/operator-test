@@ -12,18 +12,18 @@ entries:
     name: stable-v1
     package: cluster-assessment-operator
     entries:
-      - name: cluster-assessment-operator.v1.0.0
+      - name: cluster-assessment-operator.v1.1.0
   - schema: olm.channel
     name: candidate-v1
     package: cluster-assessment-operator
     entries:
-      - name: cluster-assessment-operator.v1.0.0
+      - name: cluster-assessment-operator.v1.1.0
   - schema: olm.channel
     name: fast-v1
     package: cluster-assessment-operator
     entries:
-      - name: cluster-assessment-operator.v1.0.0
+      - name: cluster-assessment-operator.v1.1.0
   - schema: olm.bundle
-    name: cluster-assessment-operator.v1.0.0
+    name: cluster-assessment-operator.v1.1.0
     package: cluster-assessment-operator
-    image: ghcr.io/diegobskt/cluster-assessment-operator-bundle:v1.0.0
+    image: ghcr.io/DiegoBskt/cluster-assessment-operator-bundle:v1.1.0
