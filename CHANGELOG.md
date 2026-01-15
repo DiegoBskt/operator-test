@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-01-15
+
+### Fixed
+- FBC catalog image references now use lowercase (fixes OLM visibility)
+- ConfigMap names always include timestamp to prevent overwriting previous reports
+
 ## [1.1.0] - 2026-01-15
 
 ### Added
@@ -66,10 +72,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 1.1.1 | 2026-01-15 | FBC fix, ConfigMap timestamp enhancement |
 | 1.1.0 | 2026-01-15 | 6 new validators (18 total) |
 | 1.0.0 | 2026-01-14 | Initial release |
 
-[Unreleased]: https://github.com/diegobskt/cluster-assessment-operator/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/diegobskt/cluster-assessment-operator/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/diegobskt/cluster-assessment-operator/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/diegobskt/cluster-assessment-operator/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/diegobskt/cluster-assessment-operator/releases/tag/v1.0.0
 

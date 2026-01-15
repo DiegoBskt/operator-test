@@ -24,8 +24,8 @@ metadata:
     # OLM Best Practices annotations
     capabilities: Basic Install
     categories: Monitoring,Developer Tools
-    containerImage: ghcr.io/diegobskt/cluster-assessment-operator:v1.1.0
-    createdAt: "2026-01-15T00:00:00Z"
+    containerImage: ghcr.io/diegobskt/cluster-assessment-operator:v1.1.1
+    createdAt: "2026-01-15T14:00:00Z"
     description: Read-only OpenShift cluster configuration assessment operator
     operators.operatorframework.io/builder: operator-sdk-v1.34.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v4
@@ -33,13 +33,13 @@ metadata:
     support: Community
     # Upgrade path configuration per OLM best practices:
     # - skipRange allows direct upgrades from older versions to this version
-    olm.skipRange: ">=1.0.0 <1.1.0"
+    olm.skipRange: ">=1.0.0 <1.1.1"
     # Multi-arch support annotations
     operatorframework.io/suggested-namespace: cluster-assessment-operator
     operatorframework.io/arch.amd64: supported
     operatorframework.io/arch.arm64: supported
     operatorframework.io/os.linux: supported
-  name: cluster-assessment-operator.v1.1.0
+  name: cluster-assessment-operator.v1.1.1
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -341,7 +341,7 @@ spec:
               spec:
                 containers:
                   - name: manager
-                    image: ghcr.io/diegobskt/cluster-assessment-operator:v1.1.0
+                    image: ghcr.io/diegobskt/cluster-assessment-operator:v1.1.1
                     imagePullPolicy: IfNotPresent
                     command:
                       - /manager
@@ -415,6 +415,6 @@ spec:
   provider:
     name: Community
     url: https://github.com/diegobskt/cluster-assessment-operator
-  version: 1.1.0
+  version: 1.1.1
   # Replaces field - required for upgrade graph
-  replaces: cluster-assessment-operator.v1.0.0
+  replaces: cluster-assessment-operator.v1.1.0

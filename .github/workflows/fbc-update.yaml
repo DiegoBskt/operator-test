@@ -13,7 +13,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   update-catalogs:
@@ -28,6 +27,12 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+
+      - name: Convert image name to lowercase
+        id: lowercase
+        run: |
+          IMAGE_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
 
       - name: Determine version
         id: version
@@ -51,7 +56,7 @@ jobs:
       - name: Update catalog templates
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          BUNDLE_IMG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-bundle:${VERSION}"
+          BUNDLE_IMG="${{ env.REGISTRY }}/${{ steps.lowercase.outputs.image_name }}-bundle:${VERSION}"
 
           echo "Updating catalog templates for version: $VERSION"
 
@@ -64,7 +69,7 @@ jobs:
       - name: Regenerate FBC catalogs
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          BUNDLE_IMG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-bundle:${VERSION}"
+          BUNDLE_IMG="${{ env.REGISTRY }}/${{ steps.lowercase.outputs.image_name }}-bundle:${VERSION}"
           SEMVER="${VERSION#v}"
 
           for version in v4.12 v4.13 v4.14 v4.15 v4.16 v4.17 v4.18 v4.19 v4.20; do

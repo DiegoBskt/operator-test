@@ -443,11 +443,13 @@ func (r *ClusterAssessmentReconciler) storeReportInConfigMap(ctx context.Context
 		}
 	}
 
-	// Determine ConfigMap name - add timestamp to avoid overwriting previous reports
+	// Determine ConfigMap name - always add timestamp to avoid overwriting previous reports
+	timestamp := time.Now().Format("20060102-150405")
 	cmName := assessment.Spec.ReportStorage.ConfigMap.Name
 	if cmName == "" {
-		timestamp := time.Now().Format("20060102-150405")
 		cmName = fmt.Sprintf("%s-report-%s", assessment.Name, timestamp)
+	} else {
+		cmName = fmt.Sprintf("%s-%s", cmName, timestamp)
 	}
 
 	// Create or update ConfigMap
