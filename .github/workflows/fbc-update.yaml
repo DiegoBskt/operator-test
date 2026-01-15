@@ -64,6 +64,7 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           BUNDLE_IMG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-bundle:${VERSION}"
+          SEMVER="${VERSION#v}"
           
           for version in v4.12 v4.13 v4.14 v4.15 v4.16 v4.17 v4.18 v4.19 v4.20; do
             if [ -f "catalog-templates/$version.yaml" ]; then
@@ -71,7 +72,7 @@ jobs:
               mkdir -p "catalogs/$version/cluster-assessment-operator"
               
               # Create catalog with proper FBC structure
-              cat > "catalogs/$version/cluster-assessment-operator/catalog.yaml" << CATALOG_EOF
+              cat > "catalogs/$version/cluster-assessment-operator/catalog.yaml" <<EOF
 ---
 schema: olm.package
 name: cluster-assessment-operator
@@ -97,8 +98,8 @@ properties:
   - type: olm.package
     value:
       packageName: cluster-assessment-operator
-      version: ${VERSION#v}
-CATALOG_EOF
+      version: "${SEMVER}"
+EOF
             fi
           done
 
