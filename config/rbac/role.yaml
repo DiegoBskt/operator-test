@@ -45,6 +45,7 @@ rules:
       - persistentvolumes
       - persistentvolumeclaims
       - resourcequotas
+      - limitranges
     verbs:
       - get
       - list

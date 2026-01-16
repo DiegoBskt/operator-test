@@ -8,4 +8,4 @@
     name: cluster-assessment-operator                                                                                                                                                   
     source: cluster-assessment-catalog                                                                                                                                                  
     sourceNamespace: openshift-marketplace                                                                                                                                              
-    installPlanApproval: Automatic    
+    installPlanApproval: Automatic  
