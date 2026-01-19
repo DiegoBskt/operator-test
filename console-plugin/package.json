@@ -20,8 +20,8 @@
         "displayName": "Cluster Assessment",
         "description": "View and manage cluster assessments with health scores and recommendations",
         "exposedModules": {
-            "AssessmentDashboard": "./components/AssessmentDashboard.tsx",
-            "AssessmentDetails": "./components/AssessmentDetails.tsx"
+            "AssessmentDashboard": "./components/AssessmentDashboard",
+            "AssessmentDetails": "./components/AssessmentDetails"
         },
         "dependencies": {
             "@console/pluginAPI": "*"

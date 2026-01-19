@@ -44,7 +44,7 @@ const clusterAssessmentResource = (name: string) => ({
     isList: false,
 });
 
-const AssessmentDetails: React.FC = () => {
+export default function AssessmentDetails() {
     const { name } = useParams<{ name: string }>();
     const [activeTabKey, setActiveTabKey] = React.useState<string | number>(0);
 
@@ -268,6 +268,4 @@ const AssessmentDetails: React.FC = () => {
             </PageSection>
         </Page>
     );
-};
-
-export default AssessmentDetails;
+}

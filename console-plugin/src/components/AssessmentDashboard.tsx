@@ -42,7 +42,7 @@ const clusterAssessmentResource = {
     isList: true,
 };
 
-const AssessmentDashboard: React.FC = () => {
+export default function AssessmentDashboard() {
     const [assessments, loaded, error] = useK8sWatchResource<ClusterAssessment[]>(
         clusterAssessmentResource
     );
@@ -271,6 +271,4 @@ const AssessmentDashboard: React.FC = () => {
             />
         </>
     );
-};
-
-export default AssessmentDashboard;
+}
