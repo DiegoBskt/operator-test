@@ -13,6 +13,11 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
+        "types": [
+            "react",
+            "react-dom",
+            "node"
+        ],
         "resolveJsonModule": true,
         "isolatedModules": true,
         "jsx": "react",
