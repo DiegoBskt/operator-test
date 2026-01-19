@@ -1,62 +1,73 @@
-/* Cluster Assessment Plugin - Enhanced Styles */
-/* Prefix all classes with ca-plugin__ to avoid collisions */
+/* Cluster Assessment Plugin - Theme-Aware Styles */
+/* Uses PatternFly CSS variables for light/dark mode compatibility */
 
 /* ============================================
-   Page Layout & Header
+   CSS Variables using PatternFly theming
    ============================================ */
-.ca-plugin__page-header {
-  margin-bottom: 24px;
-}
-
-.ca-plugin__page-title {
-  font-size: 28px !important;
-  font-weight: 600 !important;
-  color: #151515;
-  margin: 0;
+:root {
+  --ca-card-bg: var(--pf-global--BackgroundColor--100);
+  --ca-card-border: var(--pf-global--BorderColor--100);
+  --ca-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --ca-text-primary: var(--pf-global--Color--100);
+  --ca-text-secondary: var(--pf-global--Color--200);
+  --ca-header-bg: var(--pf-global--BackgroundColor--200);
+  --ca-divider: var(--pf-global--BorderColor--100);
 }
 
 /* ============================================
-   Summary Cards - Grid Layout
+   Summary Cards Layout
    ============================================ */
-.ca-plugin__cards-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
-  margin-bottom: 32px;
-}
-
 .ca-plugin__summary-card {
-  background: #ffffff;
-  border: 1px solid #d2d2d2;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease-in-out;
-  overflow: hidden;
+  background: var(--ca-card-bg) !important;
+  border: 1px solid var(--ca-card-border) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--ca-card-shadow) !important;
   height: 100%;
+  overflow: hidden;
 }
 
 .ca-plugin__summary-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 6px 20px rgba(0, 0, 0, 0.06);
-  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
+/* Card with custom header */
+.ca-plugin__summary-card .pf-c-card__title,
+.ca-plugin__summary-card .pf-v5-c-card__title {
+  background: var(--ca-header-bg) !important;
+  padding: 12px 16px !important;
+  margin: 0 !important;
+  border-bottom: 1px solid var(--ca-divider) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  color: var(--ca-text-secondary) !important;
+}
+
+.ca-plugin__summary-card .pf-c-card__body,
+.ca-plugin__summary-card .pf-v5-c-card__body {
+  padding: 16px !important;
+}
+
+/* Custom styled card header */
 .ca-plugin__card-header {
-  background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
-  padding: 16px 20px;
-  border-bottom: 1px solid #e7e7e7;
-  font-size: 14px;
+  background: var(--ca-header-bg);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--ca-divider);
+  font-size: 13px;
   font-weight: 600;
-  color: #6a6e73;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  color: var(--ca-text-secondary);
 }
 
 .ca-plugin__card-body {
-  padding: 20px;
+  padding: 16px;
+  color: var(--ca-text-primary);
 }
 
 /* ============================================
-   Score Gauge Section
+   Score Display
    ============================================ */
 .ca-plugin__score-card {
   text-align: center;
@@ -66,42 +77,44 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 16px;
+  padding: 8px;
 }
 
 .ca-plugin__score-gauge svg {
-  max-width: 160px;
+  max-width: 140px;
   height: auto;
 }
 
 .ca-plugin__score-value {
-  font-size: 48px;
+  font-size: 40px;
   font-weight: 700;
-  line-height: 1;
-  margin-bottom: 8px;
+  line-height: 1.2;
+  margin-bottom: 4px;
+  color: var(--ca-text-primary);
 }
 
 .ca-plugin__score-value--good {
-  color: #3e8635;
+  color: var(--pf-global--success-color--100) !important;
 }
 
 .ca-plugin__score-value--warning {
-  color: #f0ab00;
+  color: var(--pf-global--warning-color--100) !important;
 }
 
 .ca-plugin__score-value--critical {
-  color: #c9190b;
+  color: var(--pf-global--danger-color--100) !important;
 }
 
 .ca-plugin__score-label {
-  font-size: 14px;
-  color: #6a6e73;
+  font-size: 12px;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  color: var(--ca-text-secondary);
 }
 
 /* ============================================
-   Findings Summary Section
+   Findings List (Dashboard)
    ============================================ */
 .ca-plugin__findings-list {
   list-style: none;
@@ -113,7 +126,7 @@
   display: flex;
   align-items: center;
   padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--ca-divider);
 }
 
 .ca-plugin__findings-item:last-child {
@@ -127,44 +140,45 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 16px;
+  margin-right: 12px;
   flex-shrink: 0;
+  font-size: 14px;
 }
 
 .ca-plugin__findings-icon--pass {
-  background: rgba(62, 134, 53, 0.1);
-  color: #3e8635;
+  background: rgba(62, 134, 53, 0.15);
+  color: var(--pf-global--success-color--100);
 }
 
 .ca-plugin__findings-icon--warn {
-  background: rgba(240, 171, 0, 0.1);
-  color: #f0ab00;
+  background: rgba(240, 171, 0, 0.15);
+  color: var(--pf-global--warning-color--100);
 }
 
 .ca-plugin__findings-icon--fail {
-  background: rgba(201, 25, 11, 0.1);
-  color: #c9190b;
+  background: rgba(201, 25, 11, 0.15);
+  color: var(--pf-global--danger-color--100);
 }
 
 .ca-plugin__findings-icon--info {
-  background: rgba(0, 102, 204, 0.1);
-  color: #0066cc;
+  background: rgba(0, 102, 204, 0.15);
+  color: var(--pf-global--info-color--100);
 }
 
 .ca-plugin__findings-label {
   font-size: 14px;
-  color: #6a6e73;
+  color: var(--ca-text-primary);
   flex: 1;
 }
 
 .ca-plugin__findings-count {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
-  color: #151515;
+  color: var(--ca-text-primary);
 }
 
 /* ============================================
-   Cluster Info Section
+   Info List (Cluster Info, Config, etc.)
    ============================================ */
 .ca-plugin__info-list {
   list-style: none;
@@ -176,8 +190,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--ca-divider);
 }
 
 .ca-plugin__info-item:last-child {
@@ -186,35 +200,38 @@
 
 .ca-plugin__info-label {
   font-size: 14px;
-  color: #6a6e73;
+  color: var(--ca-text-secondary);
 }
 
 .ca-plugin__info-value {
   font-size: 14px;
   font-weight: 500;
-  color: #151515;
+  color: var(--ca-text-primary);
 }
 
 /* ============================================
-   Assessments Table Section
+   Table Card Section
    ============================================ */
 .ca-plugin__table-card {
-  margin-top: 8px;
+  background: var(--ca-card-bg);
+  border: 1px solid var(--ca-card-border);
+  border-radius: 8px;
+  box-shadow: var(--ca-card-shadow);
+  overflow: hidden;
 }
 
 .ca-plugin__table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  background: #f5f5f5;
-  border-bottom: 1px solid #d2d2d2;
+  background: var(--ca-header-bg);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--ca-divider);
 }
 
 .ca-plugin__table-title {
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 600;
-  color: #151515;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ca-text-secondary);
   margin: 0;
 }
 
@@ -222,104 +239,71 @@
   overflow-x: auto;
 }
 
-/* Enhanced Table Styles */
-.ca-plugin__data-table {
-  width: 100%;
-  border-collapse: collapse;
+/* ============================================
+   Page Header Styling
+   ============================================ */
+.ca-plugin__page-header {
+  margin-bottom: 0;
 }
 
-.ca-plugin__data-table th {
-  background: #fafafa;
-  padding: 12px 16px;
-  text-align: left;
+.ca-plugin__page-title {
+  color: var(--ca-text-primary) !important;
+}
+
+/* ============================================
+   PatternFly Table Overrides for Theme
+   ============================================ */
+.ca-plugin__table-wrapper .pf-c-table,
+.ca-plugin__table-wrapper .pf-v5-c-table {
+  background: var(--ca-card-bg);
+}
+
+.ca-plugin__table-wrapper .pf-c-table th,
+.ca-plugin__table-wrapper .pf-v5-c-table th {
+  background: var(--ca-header-bg);
+  color: var(--ca-text-secondary);
   font-size: 12px;
   font-weight: 600;
-  color: #6a6e73;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  border-bottom: 2px solid #d2d2d2;
 }
 
-.ca-plugin__data-table td {
+.ca-plugin__table-wrapper .pf-c-table td,
+.ca-plugin__table-wrapper .pf-v5-c-table td {
+  color: var(--ca-text-primary);
+  border-color: var(--ca-divider);
+}
+
+/* ============================================
+   Findings Table Specific
+   ============================================ */
+.ca-plugin__findings-toolbar {
+  padding: 12px 0;
+  margin-bottom: 8px;
+}
+
+.ca-plugin__expandable-content {
   padding: 16px;
-  border-bottom: 1px solid #f0f0f0;
-  font-size: 14px;
-  color: #151515;
-}
-
-.ca-plugin__data-table tr:hover td {
-  background: #f9f9f9;
-}
-
-.ca-plugin__data-table tr:last-child td {
-  border-bottom: none;
-}
-
-/* ============================================
-   Status Labels & Badges
-   ============================================ */
-.ca-plugin__status-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.ca-plugin__status-badge--completed {
-  background: rgba(62, 134, 53, 0.1);
-  color: #3e8635;
-}
-
-.ca-plugin__status-badge--running {
-  background: rgba(0, 102, 204, 0.1);
-  color: #0066cc;
-}
-
-.ca-plugin__status-badge--failed {
-  background: rgba(201, 25, 11, 0.1);
-  color: #c9190b;
-}
-
-.ca-plugin__status-badge--pending {
-  background: rgba(106, 110, 115, 0.1);
-  color: #6a6e73;
-}
-
-/* Profile badges */
-.ca-plugin__profile-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
+  background: var(--ca-header-bg);
   border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
+  margin-top: 8px;
+  color: var(--ca-text-primary);
 }
 
-.ca-plugin__profile-badge--production {
-  background: rgba(0, 102, 204, 0.1);
-  color: #0066cc;
+.ca-plugin__expandable-content h4 {
+  color: var(--ca-text-primary);
+  font-weight: 600;
+  margin-top: 12px;
+  margin-bottom: 8px;
 }
 
-.ca-plugin__profile-badge--development {
-  background: rgba(62, 134, 53, 0.1);
-  color: #3e8635;
+.ca-plugin__expandable-content h4:first-child {
+  margin-top: 0;
 }
 
-/* ============================================
-   Action Buttons
-   ============================================ */
-.ca-plugin__view-link {
-  color: #0066cc;
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 14px;
-}
-
-.ca-plugin__view-link:hover {
-  text-decoration: underline;
-  color: #004080;
+.ca-plugin__reference-link {
+  display: block;
+  margin-bottom: 4px;
 }
 
 /* ============================================
@@ -328,24 +312,25 @@
 .ca-plugin__empty-state {
   text-align: center;
   padding: 60px 40px;
+  color: var(--ca-text-primary);
 }
 
 .ca-plugin__empty-icon {
   font-size: 48px;
-  color: #6a6e73;
+  color: var(--ca-text-secondary);
   margin-bottom: 24px;
 }
 
 .ca-plugin__empty-title {
   font-size: 20px;
   font-weight: 600;
-  color: #151515;
+  color: var(--ca-text-primary);
   margin-bottom: 12px;
 }
 
 .ca-plugin__empty-desc {
   font-size: 14px;
-  color: #6a6e73;
+  color: var(--ca-text-secondary);
   margin-bottom: 24px;
   max-width: 400px;
   margin-left: auto;
@@ -353,62 +338,105 @@
 }
 
 /* ============================================
-   Dark Mode Support (OpenShift Console)
+   Status Colors (used in various places)
    ============================================ */
-@media (prefers-color-scheme: dark) {
-  .ca-plugin__summary-card {
-    background: #292929;
-    border-color: #4f4f4f;
-  }
+.ca-plugin__status--pass {
+  color: var(--pf-global--success-color--100);
+}
 
-  .ca-plugin__card-header {
-    background: linear-gradient(135deg, #333333 0%, #2a2a2a 100%);
-    border-color: #4f4f4f;
-    color: #c9c9c9;
-  }
+.ca-plugin__status--warn {
+  color: var(--pf-global--warning-color--100);
+}
 
-  .ca-plugin__page-title,
-  .ca-plugin__findings-count,
-  .ca-plugin__info-value,
-  .ca-plugin__table-title {
-    color: #ffffff;
-  }
+.ca-plugin__status--fail {
+  color: var(--pf-global--danger-color--100);
+}
 
-  .ca-plugin__findings-item,
-  .ca-plugin__info-item {
-    border-color: #4f4f4f;
-  }
-
-  .ca-plugin__data-table th {
-    background: #333333;
-    border-color: #4f4f4f;
-  }
-
-  .ca-plugin__data-table td {
-    border-color: #4f4f4f;
-    color: #ffffff;
-  }
-
-  .ca-plugin__data-table tr:hover td {
-    background: #333333;
-  }
+.ca-plugin__status--info {
+  color: var(--pf-global--info-color--100);
 }
 
 /* ============================================
-   Responsive Adjustments
+   Details Page Specific Styles
    ============================================ */
+.ca-plugin__details-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1200px) {
+  .ca-plugin__details-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
-  .ca-plugin__cards-container {
+  .ca-plugin__details-grid {
     grid-template-columns: 1fr;
-    gap: 16px;
   }
+}
 
-  .ca-plugin__score-value {
-    font-size: 36px;
-  }
+.ca-plugin__details-card {
+  background: var(--ca-card-bg);
+  border: 1px solid var(--ca-card-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
 
-  .ca-plugin__data-table th,
-  .ca-plugin__data-table td {
-    padding: 12px;
-  }
+.ca-plugin__details-card-header {
+  background: var(--ca-header-bg);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--ca-divider);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ca-text-secondary);
+}
+
+.ca-plugin__details-card-body {
+  padding: 16px;
+}
+
+/* ============================================
+   Results Summary Colored Items
+   ============================================ */
+.ca-plugin__result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ca-divider);
+}
+
+.ca-plugin__result-item:last-child {
+  border-bottom: none;
+}
+
+.ca-plugin__result-label {
+  font-size: 14px;
+  color: var(--ca-text-secondary);
+}
+
+.ca-plugin__result-value {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.ca-plugin__result-value--pass {
+  color: var(--pf-global--success-color--100);
+}
+
+.ca-plugin__result-value--warn {
+  color: var(--pf-global--warning-color--100);
+}
+
+.ca-plugin__result-value--fail {
+  color: var(--pf-global--danger-color--100);
+}
+
+.ca-plugin__result-value--total {
+  color: var(--ca-text-primary);
 }

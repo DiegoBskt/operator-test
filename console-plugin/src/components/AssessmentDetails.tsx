@@ -4,11 +4,6 @@ import {
     Page,
     PageSection,
     Title,
-    Card,
-    CardTitle,
-    CardBody,
-    Grid,
-    GridItem,
     Breadcrumb,
     BreadcrumbItem,
     Split,
@@ -28,6 +23,9 @@ import {
 import {
     ExclamationCircleIcon,
     SyncIcon,
+    CheckCircleIcon,
+    ExclamationTriangleIcon,
+    InfoCircleIcon,
 } from '@patternfly/react-icons';
 import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk';
 import { Link } from 'react-router-dom';
@@ -85,8 +83,17 @@ const AssessmentDetails: React.FC = () => {
     const clusterInfo = assessment?.status?.clusterInfo;
     const findings = assessment?.status?.findings || [];
 
+    const getScoreClass = (score: number) => {
+        if (score >= 80) return 'ca-plugin__score-value--good';
+        if (score >= 60) return 'ca-plugin__score-value--warning';
+        return 'ca-plugin__score-value--critical';
+    };
+
+    const score = summary?.score ?? 0;
+
     return (
         <Page>
+            {/* Breadcrumb */}
             <PageSection variant="light">
                 <Breadcrumb>
                     <BreadcrumbItem>
@@ -96,10 +103,11 @@ const AssessmentDetails: React.FC = () => {
                 </Breadcrumb>
             </PageSection>
 
+            {/* Page Header */}
             <PageSection variant="light">
                 <Split hasGutter>
                     <SplitItem isFilled>
-                        <Flex spaceItems={{ default: 'spaceItemsMd' }}>
+                        <Flex spaceItems={{ default: 'spaceItemsMd' }} alignItems={{ default: 'alignItemsCenter' }}>
                             <FlexItem>
                                 <Title headingLevel="h1">{name}</Title>
                             </FlexItem>
@@ -127,119 +135,136 @@ const AssessmentDetails: React.FC = () => {
                 </Split>
             </PageSection>
 
+            {/* Cards Grid Section */}
             <PageSection>
-                <Grid hasGutter>
-                    {/* Score Card */}
-                    <GridItem md={3}>
-                        <Card className="ca-plugin__summary-card">
-                            <CardTitle>Health Score</CardTitle>
-                            <CardBody>
-                                <ScoreGauge score={summary?.score ?? 0} />
-                            </CardBody>
-                        </Card>
-                    </GridItem>
+                <div className="ca-plugin__details-grid">
+                    {/* Health Score Card */}
+                    <div className="ca-plugin__details-card ca-plugin__score-card">
+                        <div className="ca-plugin__details-card-header">Health Score</div>
+                        <div className="ca-plugin__details-card-body" style={{ textAlign: 'center' }}>
+                            <div className="ca-plugin__score-gauge">
+                                <ScoreGauge score={score} />
+                            </div>
+                            <div className={`ca-plugin__score-value ${getScoreClass(score)}`}>
+                                {score}%
+                            </div>
+                            <div className="ca-plugin__score-label">
+                                {score >= 80 ? 'Good' : score >= 60 ? 'Warning' : 'Critical'}
+                            </div>
+                        </div>
+                    </div>
 
-                    {/* Cluster Info */}
-                    <GridItem md={3}>
-                        <Card className="ca-plugin__summary-card">
-                            <CardTitle>Cluster Info</CardTitle>
-                            <CardBody>
-                                <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsSm' }}>
-                                    <FlexItem>
-                                        <strong>Version:</strong> {clusterInfo?.clusterVersion ?? 'N/A'}
-                                    </FlexItem>
-                                    <FlexItem>
-                                        <strong>Platform:</strong> {clusterInfo?.platform ?? 'N/A'}
-                                    </FlexItem>
-                                    <FlexItem>
-                                        <strong>Nodes:</strong> {clusterInfo?.nodeCount ?? 'N/A'}
-                                    </FlexItem>
-                                </Flex>
-                            </CardBody>
-                        </Card>
-                    </GridItem>
+                    {/* Cluster Info Card */}
+                    <div className="ca-plugin__details-card">
+                        <div className="ca-plugin__details-card-header">Cluster Info</div>
+                        <div className="ca-plugin__details-card-body">
+                            <ul className="ca-plugin__info-list">
+                                <li className="ca-plugin__info-item">
+                                    <span className="ca-plugin__info-label">Version</span>
+                                    <span className="ca-plugin__info-value">{clusterInfo?.clusterVersion ?? 'N/A'}</span>
+                                </li>
+                                <li className="ca-plugin__info-item">
+                                    <span className="ca-plugin__info-label">Platform</span>
+                                    <span className="ca-plugin__info-value">{clusterInfo?.platform ?? 'N/A'}</span>
+                                </li>
+                                <li className="ca-plugin__info-item">
+                                    <span className="ca-plugin__info-label">Nodes</span>
+                                    <span className="ca-plugin__info-value">{clusterInfo?.nodeCount ?? 'N/A'}</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
 
-                    {/* Assessment Config */}
-                    <GridItem md={3}>
-                        <Card className="ca-plugin__summary-card">
-                            <CardTitle>Configuration</CardTitle>
-                            <CardBody>
-                                <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsSm' }}>
-                                    <FlexItem>
-                                        <strong>Profile:</strong>{' '}
+                    {/* Configuration Card */}
+                    <div className="ca-plugin__details-card">
+                        <div className="ca-plugin__details-card-header">Configuration</div>
+                        <div className="ca-plugin__details-card-body">
+                            <ul className="ca-plugin__info-list">
+                                <li className="ca-plugin__info-item">
+                                    <span className="ca-plugin__info-label">Profile</span>
+                                    <span className="ca-plugin__info-value">
                                         <Label color={assessment?.spec?.profile === 'production' ? 'blue' : 'green'}>
                                             {assessment?.spec?.profile ?? 'production'}
                                         </Label>
-                                    </FlexItem>
-                                    <FlexItem>
-                                        <strong>Schedule:</strong> {assessment?.spec?.schedule || 'One-time'}
-                                    </FlexItem>
-                                    <FlexItem>
-                                        <strong>Last Run:</strong>{' '}
+                                    </span>
+                                </li>
+                                <li className="ca-plugin__info-item">
+                                    <span className="ca-plugin__info-label">Schedule</span>
+                                    <span className="ca-plugin__info-value">{assessment?.spec?.schedule || 'One-time'}</span>
+                                </li>
+                                <li className="ca-plugin__info-item">
+                                    <span className="ca-plugin__info-label">Last Run</span>
+                                    <span className="ca-plugin__info-value">
                                         {assessment?.status?.lastRunTime
                                             ? new Date(assessment.status.lastRunTime).toLocaleString()
                                             : 'Never'}
-                                    </FlexItem>
-                                </Flex>
-                            </CardBody>
-                        </Card>
-                    </GridItem>
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
 
-                    {/* Summary Stats */}
-                    <GridItem md={3}>
-                        <Card className="ca-plugin__summary-card">
-                            <CardTitle>Results Summary</CardTitle>
-                            <CardBody>
-                                <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsSm' }}>
-                                    <FlexItem>
-                                        <strong>Total Checks:</strong> {summary?.totalChecks ?? 0}
-                                    </FlexItem>
-                                    <FlexItem style={{ color: 'var(--pf-global--success-color--100)' }}>
-                                        <strong>Pass:</strong> {summary?.passCount ?? 0}
-                                    </FlexItem>
-                                    <FlexItem style={{ color: 'var(--pf-global--warning-color--100)' }}>
-                                        <strong>Warn:</strong> {summary?.warnCount ?? 0}
-                                    </FlexItem>
-                                    <FlexItem style={{ color: 'var(--pf-global--danger-color--100)' }}>
-                                        <strong>Fail:</strong> {summary?.failCount ?? 0}
-                                    </FlexItem>
-                                </Flex>
-                            </CardBody>
-                        </Card>
-                    </GridItem>
+                    {/* Results Summary Card */}
+                    <div className="ca-plugin__details-card">
+                        <div className="ca-plugin__details-card-header">Results Summary</div>
+                        <div className="ca-plugin__details-card-body">
+                            <div className="ca-plugin__result-item">
+                                <span className="ca-plugin__result-label">Total Checks</span>
+                                <span className="ca-plugin__result-value ca-plugin__result-value--total">{summary?.totalChecks ?? 0}</span>
+                            </div>
+                            <div className="ca-plugin__result-item">
+                                <span className="ca-plugin__result-label">
+                                    <CheckCircleIcon className="ca-plugin__status--pass" style={{ marginRight: '8px' }} />
+                                    Passed
+                                </span>
+                                <span className="ca-plugin__result-value ca-plugin__result-value--pass">{summary?.passCount ?? 0}</span>
+                            </div>
+                            <div className="ca-plugin__result-item">
+                                <span className="ca-plugin__result-label">
+                                    <ExclamationTriangleIcon className="ca-plugin__status--warn" style={{ marginRight: '8px' }} />
+                                    Warnings
+                                </span>
+                                <span className="ca-plugin__result-value ca-plugin__result-value--warn">{summary?.warnCount ?? 0}</span>
+                            </div>
+                            <div className="ca-plugin__result-item">
+                                <span className="ca-plugin__result-label">
+                                    <ExclamationCircleIcon className="ca-plugin__status--fail" style={{ marginRight: '8px' }} />
+                                    Failed
+                                </span>
+                                <span className="ca-plugin__result-value ca-plugin__result-value--fail">{summary?.failCount ?? 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                    {/* Findings Table */}
-                    <GridItem span={12}>
-                        <Card>
-                            <CardBody>
-                                <Tabs
-                                    activeKey={activeTabKey}
-                                    onSelect={(_event, tabIndex) => setActiveTabKey(tabIndex)}
-                                >
-                                    <Tab eventKey={0} title={<TabTitleText>All Findings ({findings.length})</TabTitleText>}>
-                                        <div style={{ paddingTop: '16px' }}>
-                                            <FindingsTable findings={findings} />
-                                        </div>
-                                    </Tab>
-                                    <Tab
-                                        eventKey={1}
-                                        title={
-                                            <TabTitleText>
-                                                Issues ({findings.filter((f) => f.status === 'FAIL' || f.status === 'WARN').length})
-                                            </TabTitleText>
-                                        }
-                                    >
-                                        <div style={{ paddingTop: '16px' }}>
-                                            <FindingsTable
-                                                findings={findings.filter((f) => f.status === 'FAIL' || f.status === 'WARN')}
-                                            />
-                                        </div>
-                                    </Tab>
-                                </Tabs>
-                            </CardBody>
-                        </Card>
-                    </GridItem>
-                </Grid>
+                {/* Findings Table */}
+                <div className="ca-plugin__table-card">
+                    <Tabs
+                        activeKey={activeTabKey}
+                        onSelect={(_event, tabIndex) => setActiveTabKey(tabIndex)}
+                        style={{ padding: '0 16px' }}
+                    >
+                        <Tab eventKey={0} title={<TabTitleText>All Findings ({findings.length})</TabTitleText>}>
+                            <div style={{ padding: '16px' }}>
+                                <FindingsTable findings={findings} />
+                            </div>
+                        </Tab>
+                        <Tab
+                            eventKey={1}
+                            title={
+                                <TabTitleText>
+                                    Issues ({findings.filter((f) => f.status === 'FAIL' || f.status === 'WARN').length})
+                                </TabTitleText>
+                            }
+                        >
+                            <div style={{ padding: '16px' }}>
+                                <FindingsTable
+                                    findings={findings.filter((f) => f.status === 'FAIL' || f.status === 'WARN')}
+                                />
+                            </div>
+                        </Tab>
+                    </Tabs>
+                </div>
             </PageSection>
         </Page>
     );
