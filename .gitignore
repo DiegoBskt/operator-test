@@ -49,3 +49,9 @@ index.db
 # Console plugin
 console-plugin/node_modules/
 console-plugin/dist/
+
+# extra safety :)
+*.log
+.env.local
+.env.*.local
+*.bak
