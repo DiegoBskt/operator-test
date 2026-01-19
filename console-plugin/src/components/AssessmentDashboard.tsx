@@ -14,14 +14,8 @@ import {
     EmptyStateBody,
     Spinner,
     Label,
-    Flex,
-    FlexItem,
     Split,
     SplitItem,
-    DescriptionList,
-    DescriptionListGroup,
-    DescriptionListTerm,
-    DescriptionListDescription,
 } from '@patternfly/react-core';
 import {
     CheckCircleIcon,
@@ -32,7 +26,6 @@ import {
     PlusCircleIcon,
 } from '@patternfly/react-icons';
 import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk';
-import { Link } from 'react-router-dom';
 import { ClusterAssessment } from '../types';
 import { ScoreGauge } from './ScoreGauge';
 import { AssessmentsTable } from './AssessmentsTable';
@@ -48,8 +41,6 @@ const clusterAssessmentResource = {
     },
     isList: true,
 };
-
-
 
 const AssessmentDashboard: React.FC = () => {
     const [assessments, loaded, error] = useK8sWatchResource<ClusterAssessment[]>(
@@ -68,6 +59,13 @@ const AssessmentDashboard: React.FC = () => {
     }, [assessments]);
 
     const summary = latestAssessment?.status?.summary;
+
+    // Get score color class
+    const getScoreClass = (score: number) => {
+        if (score >= 80) return 'ca-plugin__score-value--good';
+        if (score >= 60) return 'ca-plugin__score-value--warning';
+        return 'ca-plugin__score-value--critical';
+    };
 
     if (error) {
         return (
@@ -106,12 +104,12 @@ const AssessmentDashboard: React.FC = () => {
                 />
                 <Page>
                     <PageSection>
-                        <EmptyState>
-                            <EmptyStateIcon icon={SearchIcon} />
-                            <Title headingLevel="h4" size="lg">No assessments found</Title>
-                            <EmptyStateBody>
-                                Create your first cluster assessment to analyze your OpenShift configuration.
-                            </EmptyStateBody>
+                        <div className="ca-plugin__empty-state">
+                            <SearchIcon className="ca-plugin__empty-icon" />
+                            <h3 className="ca-plugin__empty-title">No Assessments Found</h3>
+                            <p className="ca-plugin__empty-desc">
+                                Create your first cluster assessment to analyze your OpenShift configuration and get actionable recommendations.
+                            </p>
                             <Button
                                 variant="primary"
                                 icon={<PlusCircleIcon />}
@@ -119,20 +117,25 @@ const AssessmentDashboard: React.FC = () => {
                             >
                                 Create Assessment
                             </Button>
-                        </EmptyState>
+                        </div>
                     </PageSection>
                 </Page>
             </>
         );
     }
 
+    const score = summary?.score ?? 0;
+
     return (
         <>
             <Page>
-                <PageSection variant="light">
+                {/* Header Section */}
+                <PageSection variant="light" className="ca-plugin__page-header">
                     <Split hasGutter>
                         <SplitItem isFilled>
-                            <Title headingLevel="h1">Cluster Assessment</Title>
+                            <Title headingLevel="h1" className="ca-plugin__page-title">
+                                Cluster Assessment
+                            </Title>
                         </SplitItem>
                         <SplitItem>
                             <Button
@@ -146,100 +149,119 @@ const AssessmentDashboard: React.FC = () => {
                     </Split>
                 </PageSection>
 
+                {/* Dashboard Cards Section */}
                 <PageSection>
-                    <Grid hasGutter>
-                        {/* Score Card */}
-                        <GridItem md={4}>
-                            <Card className="ca-plugin__summary-card">
-                                <CardTitle>Health Score</CardTitle>
-                                <CardBody>
-                                    <ScoreGauge score={summary?.score ?? 0} />
-                                </CardBody>
-                            </Card>
+                    <Grid hasGutter lg={4} md={6} sm={12}>
+                        {/* Health Score Card */}
+                        <GridItem>
+                            <div className="ca-plugin__summary-card ca-plugin__score-card">
+                                <div className="ca-plugin__card-header">
+                                    Health Score
+                                </div>
+                                <div className="ca-plugin__card-body">
+                                    <div className="ca-plugin__score-gauge">
+                                        <ScoreGauge score={score} />
+                                    </div>
+                                    <div className={`ca-plugin__score-value ${getScoreClass(score)}`}>
+                                        {score}%
+                                    </div>
+                                    <div className="ca-plugin__score-label">
+                                        {score >= 80 ? 'Good' : score >= 60 ? 'Warning' : 'Critical'}
+                                    </div>
+                                </div>
+                            </div>
                         </GridItem>
 
                         {/* Findings Summary Card */}
-                        <GridItem md={4}>
-                            <Card className="ca-plugin__summary-card">
-                                <CardTitle>Findings Summary</CardTitle>
-                                <CardBody>
-                                    <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsMd' }}>
-                                        <FlexItem>
-                                            <Flex spaceItems={{ default: 'spaceItemsSm' }}>
-                                                <FlexItem>
-                                                    <CheckCircleIcon color="var(--pf-global--success-color--100)" />
-                                                </FlexItem>
-                                                <FlexItem>Pass: {summary?.passCount ?? 0}</FlexItem>
-                                            </Flex>
-                                        </FlexItem>
-                                        <FlexItem>
-                                            <Flex spaceItems={{ default: 'spaceItemsSm' }}>
-                                                <FlexItem>
-                                                    <ExclamationTriangleIcon color="var(--pf-global--warning-color--100)" />
-                                                </FlexItem>
-                                                <FlexItem>Warn: {summary?.warnCount ?? 0}</FlexItem>
-                                            </Flex>
-                                        </FlexItem>
-                                        <FlexItem>
-                                            <Flex spaceItems={{ default: 'spaceItemsSm' }}>
-                                                <FlexItem>
-                                                    <ExclamationCircleIcon color="var(--pf-global--danger-color--100)" />
-                                                </FlexItem>
-                                                <FlexItem>Fail: {summary?.failCount ?? 0}</FlexItem>
-                                            </Flex>
-                                        </FlexItem>
-                                        <FlexItem>
-                                            <Flex spaceItems={{ default: 'spaceItemsSm' }}>
-                                                <FlexItem>
-                                                    <InfoCircleIcon color="var(--pf-global--info-color--100)" />
-                                                </FlexItem>
-                                                <FlexItem>Info: {summary?.infoCount ?? 0}</FlexItem>
-                                            </Flex>
-                                        </FlexItem>
-                                    </Flex>
-                                </CardBody>
-                            </Card>
+                        <GridItem>
+                            <div className="ca-plugin__summary-card">
+                                <div className="ca-plugin__card-header">
+                                    Findings Summary
+                                </div>
+                                <div className="ca-plugin__card-body">
+                                    <ul className="ca-plugin__findings-list">
+                                        <li className="ca-plugin__findings-item">
+                                            <span className="ca-plugin__findings-icon ca-plugin__findings-icon--pass">
+                                                <CheckCircleIcon />
+                                            </span>
+                                            <span className="ca-plugin__findings-label">Passed Checks</span>
+                                            <span className="ca-plugin__findings-count">{summary?.passCount ?? 0}</span>
+                                        </li>
+                                        <li className="ca-plugin__findings-item">
+                                            <span className="ca-plugin__findings-icon ca-plugin__findings-icon--warn">
+                                                <ExclamationTriangleIcon />
+                                            </span>
+                                            <span className="ca-plugin__findings-label">Warnings</span>
+                                            <span className="ca-plugin__findings-count">{summary?.warnCount ?? 0}</span>
+                                        </li>
+                                        <li className="ca-plugin__findings-item">
+                                            <span className="ca-plugin__findings-icon ca-plugin__findings-icon--fail">
+                                                <ExclamationCircleIcon />
+                                            </span>
+                                            <span className="ca-plugin__findings-label">Failed Checks</span>
+                                            <span className="ca-plugin__findings-count">{summary?.failCount ?? 0}</span>
+                                        </li>
+                                        <li className="ca-plugin__findings-item">
+                                            <span className="ca-plugin__findings-icon ca-plugin__findings-icon--info">
+                                                <InfoCircleIcon />
+                                            </span>
+                                            <span className="ca-plugin__findings-label">Informational</span>
+                                            <span className="ca-plugin__findings-count">{summary?.infoCount ?? 0}</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                         </GridItem>
 
                         {/* Cluster Info Card */}
-                        <GridItem md={4}>
-                            <Card className="ca-plugin__summary-card">
-                                <CardTitle>Cluster Info</CardTitle>
-                                <CardBody>
-                                    <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsMd' }}>
-                                        <FlexItem>
-                                            <strong>Version:</strong>{' '}
-                                            {latestAssessment?.status?.clusterInfo?.clusterVersion ?? 'N/A'}
-                                        </FlexItem>
-                                        <FlexItem>
-                                            <strong>Platform:</strong>{' '}
-                                            {latestAssessment?.status?.clusterInfo?.platform ?? 'N/A'}
-                                        </FlexItem>
-                                        <FlexItem>
-                                            <strong>Nodes:</strong>{' '}
-                                            {latestAssessment?.status?.clusterInfo?.nodeCount ?? 'N/A'}
-                                        </FlexItem>
-                                        <FlexItem>
-                                            <strong>Profile:</strong>{' '}
-                                            <Label color={latestAssessment?.spec?.profile === 'production' ? 'blue' : 'green'}>
-                                                {latestAssessment?.spec?.profile ?? 'production'}
-                                            </Label>
-                                        </FlexItem>
-                                    </Flex>
-                                </CardBody>
-                            </Card>
-                        </GridItem>
-
-                        {/* Assessments Table */}
-                        <GridItem span={12}>
-                            <Card>
-                                <CardTitle>Assessments</CardTitle>
-                                <CardBody>
-                                    <AssessmentsTable assessments={assessments} />
-                                </CardBody>
-                            </Card>
+                        <GridItem>
+                            <div className="ca-plugin__summary-card">
+                                <div className="ca-plugin__card-header">
+                                    Cluster Information
+                                </div>
+                                <div className="ca-plugin__card-body">
+                                    <ul className="ca-plugin__info-list">
+                                        <li className="ca-plugin__info-item">
+                                            <span className="ca-plugin__info-label">Version</span>
+                                            <span className="ca-plugin__info-value">
+                                                {latestAssessment?.status?.clusterInfo?.clusterVersion ?? 'N/A'}
+                                            </span>
+                                        </li>
+                                        <li className="ca-plugin__info-item">
+                                            <span className="ca-plugin__info-label">Platform</span>
+                                            <span className="ca-plugin__info-value">
+                                                {latestAssessment?.status?.clusterInfo?.platform ?? 'N/A'}
+                                            </span>
+                                        </li>
+                                        <li className="ca-plugin__info-item">
+                                            <span className="ca-plugin__info-label">Nodes</span>
+                                            <span className="ca-plugin__info-value">
+                                                {latestAssessment?.status?.clusterInfo?.nodeCount ?? 'N/A'}
+                                            </span>
+                                        </li>
+                                        <li className="ca-plugin__info-item">
+                                            <span className="ca-plugin__info-label">Profile</span>
+                                            <span className="ca-plugin__info-value">
+                                                <Label color={latestAssessment?.spec?.profile === 'production' ? 'blue' : 'green'}>
+                                                    {latestAssessment?.spec?.profile ?? 'production'}
+                                                </Label>
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                         </GridItem>
                     </Grid>
+
+                    {/* Assessments Table */}
+                    <div className="ca-plugin__summary-card ca-plugin__table-card" style={{ marginTop: '24px' }}>
+                        <div className="ca-plugin__table-header">
+                            <h3 className="ca-plugin__table-title">Assessment History</h3>
+                        </div>
+                        <div className="ca-plugin__table-wrapper">
+                            <AssessmentsTable assessments={assessments} />
+                        </div>
+                    </div>
                 </PageSection>
             </Page>
             <CreateAssessmentModal

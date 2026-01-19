@@ -1,114 +1,414 @@
-/* Cluster Assessment Plugin Styles */
+/* Cluster Assessment Plugin - Enhanced Styles */
 /* Prefix all classes with ca-plugin__ to avoid collisions */
 
+/* ============================================
+   Page Layout & Header
+   ============================================ */
+.ca-plugin__page-header {
+  margin-bottom: 24px;
+}
+
+.ca-plugin__page-title {
+  font-size: 28px !important;
+  font-weight: 600 !important;
+  color: #151515;
+  margin: 0;
+}
+
+/* ============================================
+   Summary Cards - Grid Layout
+   ============================================ */
+.ca-plugin__cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
 .ca-plugin__summary-card {
-  height: 100%;
+  background: #ffffff;
+  border: 1px solid #d2d2d2;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: box-shadow 0.2s ease-in-out;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease-in-out;
+  overflow: hidden;
+  height: 100%;
 }
 
 .ca-plugin__summary-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 6px 20px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
 }
 
-.ca-plugin__summary-card .pf-c-card__body {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.ca-plugin__summary-card .pf-c-card__title {
+.ca-plugin__card-header {
+  background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
+  padding: 16px 20px;
+  border-bottom: 1px solid #e7e7e7;
+  font-size: 14px;
   font-weight: 600;
-  color: var(--pf-global--Color--100);
-  border-bottom: 1px solid var(--pf-global--BorderColor--100);
-  padding-bottom: var(--pf-global--spacer--sm);
-  margin-bottom: var(--pf-global--spacer--md);
+  color: #6a6e73;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ca-plugin__card-body {
+  padding: 20px;
+}
+
+/* ============================================
+   Score Gauge Section
+   ============================================ */
+.ca-plugin__score-card {
+  text-align: center;
 }
 
 .ca-plugin__score-gauge {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: var(--pf-global--spacer--md);
+  padding: 16px;
 }
 
 .ca-plugin__score-gauge svg {
-  max-width: 180px;
+  max-width: 160px;
+  height: auto;
 }
 
-.ca-plugin__findings-toolbar {
-  margin-bottom: var(--pf-global--spacer--md);
-  background: var(--pf-global--BackgroundColor--100);
-  padding: var(--pf-global--spacer--sm);
-  border-radius: 4px;
+.ca-plugin__score-value {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 8px;
 }
 
-.ca-plugin__status-icon {
-  margin-right: var(--pf-global--spacer--sm);
+.ca-plugin__score-value--good {
+  color: #3e8635;
 }
 
-.ca-plugin__expandable-content {
-  padding: var(--pf-global--spacer--lg);
-  background-color: var(--pf-global--BackgroundColor--200);
-  border-radius: 4px;
-  margin-top: var(--pf-global--spacer--sm);
+.ca-plugin__score-value--warning {
+  color: #f0ab00;
 }
 
-.ca-plugin__expandable-content h4 {
-  margin-top: var(--pf-global--spacer--md);
-  margin-bottom: var(--pf-global--spacer--sm);
-  font-weight: 600;
-  color: var(--pf-global--Color--100);
+.ca-plugin__score-value--critical {
+  color: #c9190b;
 }
 
-.ca-plugin__expandable-content h4:first-child {
-  margin-top: 0;
+.ca-plugin__score-label {
+  font-size: 14px;
+  color: #6a6e73;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.ca-plugin__reference-link {
-  display: block;
-  margin-bottom: var(--pf-global--spacer--xs);
+/* ============================================
+   Findings Summary Section
+   ============================================ */
+.ca-plugin__findings-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-/* Score colors */
-.ca-plugin__score--good {
-  color: var(--pf-global--success-color--100);
-}
-
-.ca-plugin__score--warning {
-  color: var(--pf-global--warning-color--100);
-}
-
-.ca-plugin__score--critical {
-  color: var(--pf-global--danger-color--100);
-}
-
-/* Stats display */
-.ca-plugin__stat-item {
+.ca-plugin__findings-item {
   display: flex;
   align-items: center;
-  gap: var(--pf-global--spacer--sm);
-  padding: var(--pf-global--spacer--xs) 0;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.ca-plugin__stat-value {
-  font-size: var(--pf-global--FontSize--xl);
-  font-weight: 700;
+.ca-plugin__findings-item:last-child {
+  border-bottom: none;
 }
 
-/* Table enhancements */
-.ca-plugin__table-row--fail {
-  background-color: rgba(201, 25, 11, 0.05);
+.ca-plugin__findings-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+  flex-shrink: 0;
 }
 
-.ca-plugin__table-row--warn {
-  background-color: rgba(240, 171, 0, 0.05);
+.ca-plugin__findings-icon--pass {
+  background: rgba(62, 134, 53, 0.1);
+  color: #3e8635;
 }
 
-/* Page header */
-.ca-plugin__page-header {
-  background: linear-gradient(135deg, var(--pf-global--primary-color--100) 0%, var(--pf-global--primary-color--200) 100%);
-  color: white;
-  padding: var(--pf-global--spacer--lg);
+.ca-plugin__findings-icon--warn {
+  background: rgba(240, 171, 0, 0.1);
+  color: #f0ab00;
+}
+
+.ca-plugin__findings-icon--fail {
+  background: rgba(201, 25, 11, 0.1);
+  color: #c9190b;
+}
+
+.ca-plugin__findings-icon--info {
+  background: rgba(0, 102, 204, 0.1);
+  color: #0066cc;
+}
+
+.ca-plugin__findings-label {
+  font-size: 14px;
+  color: #6a6e73;
+  flex: 1;
+}
+
+.ca-plugin__findings-count {
+  font-size: 20px;
+  font-weight: 600;
+  color: #151515;
+}
+
+/* ============================================
+   Cluster Info Section
+   ============================================ */
+.ca-plugin__info-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ca-plugin__info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ca-plugin__info-item:last-child {
+  border-bottom: none;
+}
+
+.ca-plugin__info-label {
+  font-size: 14px;
+  color: #6a6e73;
+}
+
+.ca-plugin__info-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #151515;
+}
+
+/* ============================================
+   Assessments Table Section
+   ============================================ */
+.ca-plugin__table-card {
+  margin-top: 8px;
+}
+
+.ca-plugin__table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #d2d2d2;
+}
+
+.ca-plugin__table-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #151515;
+  margin: 0;
+}
+
+.ca-plugin__table-wrapper {
+  overflow-x: auto;
+}
+
+/* Enhanced Table Styles */
+.ca-plugin__data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ca-plugin__data-table th {
+  background: #fafafa;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6a6e73;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #d2d2d2;
+}
+
+.ca-plugin__data-table td {
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+  color: #151515;
+}
+
+.ca-plugin__data-table tr:hover td {
+  background: #f9f9f9;
+}
+
+.ca-plugin__data-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ============================================
+   Status Labels & Badges
+   ============================================ */
+.ca-plugin__status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.ca-plugin__status-badge--completed {
+  background: rgba(62, 134, 53, 0.1);
+  color: #3e8635;
+}
+
+.ca-plugin__status-badge--running {
+  background: rgba(0, 102, 204, 0.1);
+  color: #0066cc;
+}
+
+.ca-plugin__status-badge--failed {
+  background: rgba(201, 25, 11, 0.1);
+  color: #c9190b;
+}
+
+.ca-plugin__status-badge--pending {
+  background: rgba(106, 110, 115, 0.1);
+  color: #6a6e73;
+}
+
+/* Profile badges */
+.ca-plugin__profile-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.ca-plugin__profile-badge--production {
+  background: rgba(0, 102, 204, 0.1);
+  color: #0066cc;
+}
+
+.ca-plugin__profile-badge--development {
+  background: rgba(62, 134, 53, 0.1);
+  color: #3e8635;
+}
+
+/* ============================================
+   Action Buttons
+   ============================================ */
+.ca-plugin__view-link {
+  color: #0066cc;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.ca-plugin__view-link:hover {
+  text-decoration: underline;
+  color: #004080;
+}
+
+/* ============================================
+   Empty State Enhancement
+   ============================================ */
+.ca-plugin__empty-state {
+  text-align: center;
+  padding: 60px 40px;
+}
+
+.ca-plugin__empty-icon {
+  font-size: 48px;
+  color: #6a6e73;
+  margin-bottom: 24px;
+}
+
+.ca-plugin__empty-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #151515;
+  margin-bottom: 12px;
+}
+
+.ca-plugin__empty-desc {
+  font-size: 14px;
+  color: #6a6e73;
+  margin-bottom: 24px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ============================================
+   Dark Mode Support (OpenShift Console)
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  .ca-plugin__summary-card {
+    background: #292929;
+    border-color: #4f4f4f;
+  }
+
+  .ca-plugin__card-header {
+    background: linear-gradient(135deg, #333333 0%, #2a2a2a 100%);
+    border-color: #4f4f4f;
+    color: #c9c9c9;
+  }
+
+  .ca-plugin__page-title,
+  .ca-plugin__findings-count,
+  .ca-plugin__info-value,
+  .ca-plugin__table-title {
+    color: #ffffff;
+  }
+
+  .ca-plugin__findings-item,
+  .ca-plugin__info-item {
+    border-color: #4f4f4f;
+  }
+
+  .ca-plugin__data-table th {
+    background: #333333;
+    border-color: #4f4f4f;
+  }
+
+  .ca-plugin__data-table td {
+    border-color: #4f4f4f;
+    color: #ffffff;
+  }
+
+  .ca-plugin__data-table tr:hover td {
+    background: #333333;
+  }
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+@media (max-width: 768px) {
+  .ca-plugin__cards-container {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .ca-plugin__score-value {
+    font-size: 36px;
+  }
+
+  .ca-plugin__data-table th,
+  .ca-plugin__data-table td {
+    padding: 12px;
+  }
 }
