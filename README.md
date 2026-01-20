@@ -266,15 +266,15 @@ make cleanup-olm
 
 **Option 2: CatalogSource (Production)**
 
-1. Build and push catalog:
-```bash
-make bundle-buildx
-make catalog-build-single OCP_VERSION=v4.14
-podman push ghcr.io/diegobskt/cluster-assessment-operator-catalog:v4.14
-```
+The catalog images are automatically built for all supported OCP versions (v4.12-v4.20) and always contain the latest operator version.
 
-2. Deploy the operator (single command):
+1. Detect your OpenShift version and deploy:
 ```bash
+# Auto-detect OCP version
+OCP_VERSION=$(oc version -o json | jq -r '.openshiftVersion' | cut -d. -f1,2 | sed 's/^/v/')
+echo "Detected OpenShift version: $OCP_VERSION"
+
+# Deploy the operator
 oc apply -f - <<EOF
 ---
 apiVersion: operators.coreos.com/v1alpha1
@@ -284,21 +284,26 @@ metadata:
   namespace: openshift-marketplace
 spec:
   sourceType: grpc
-  image: ghcr.io/diegobskt/cluster-assessment-operator-catalog:v4.20
+  image: ghcr.io/diegobskt/cluster-assessment-operator-catalog:${OCP_VERSION}
   displayName: Cluster Assessment Operator
   publisher: Community
+  updateStrategy:
+    registryPoll:
+      interval: 10m
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: cluster-assessment-operator
+  labels:
+    openshift.io/cluster-monitoring: "true"
 ---
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
   name: cluster-assessment-operator
   namespace: cluster-assessment-operator
-spec: {}  # AllNamespaces install mode
+spec: {}
 ---
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -310,13 +315,27 @@ spec:
   name: cluster-assessment-operator
   source: cluster-assessment-catalog
   sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic
 EOF
 ```
 
-3. Verify:
+2. Wait and verify:
 ```bash
-oc get csv -n cluster-assessment-operator | grep cluster-assessment
+# Wait for CSV to be installed
+oc get csv -n cluster-assessment-operator -w
+
+# Verify pods are running
+oc get pods -n cluster-assessment-operator
 ```
+
+3. Enable the console plugin:
+```bash
+oc patch consoles.operator.openshift.io cluster \
+  --type=merge \
+  --patch='{"spec":{"plugins":["cluster-assessment-plugin"]}}'
+```
+
+> **Note**: See [docs/RELEASE.md](docs/RELEASE.md) for detailed release process and version management documentation.
 
 ### Red Hat Certification Status
 
@@ -450,6 +469,7 @@ The UI provides:
 |----------|-------------|
 | [Architecture](docs/architecture.md) | Visual diagrams of operator components and workflows |
 | [Development Guide](docs/development.md) | Complete development, testing, and release workflows |
+| [Release Process](docs/RELEASE.md) | Version management and release procedures |
 | [Troubleshooting](docs/troubleshooting.md) | Common issues and solutions |
 | [Upgrade Guide](docs/upgrade.md) | Version upgrade procedures |
 | [Contributing](CONTRIBUTING.md) | Guidelines for contributors |
@@ -472,17 +492,30 @@ This project uses GitHub Actions for automation:
 
 ### Creating a Release
 
+The project uses centralized version management via the `VERSION` file:
+
 ```bash
-# Update CHANGELOG.md
-git tag v1.1.0
-git push origin v1.1.0
+# 1. Update VERSION file
+echo "1.3.0" > VERSION
+
+# 2. Prepare release (updates all manifests and catalogs)
+make release-prep
+
+# 3. Update CHANGELOG.md
+
+# 4. Commit, tag, and push
+git add -A
+git commit -m "chore: prepare release v1.3.0"
+git tag v1.3.0
+git push origin main v1.3.0
 ```
 
-This triggers:
-1. Builds multi-arch operator + bundle images
+This triggers the CI pipeline which:
+1. Builds multi-arch operator + bundle + console plugin images
 2. Builds catalog images for OCP v4.12-v4.20
 3. Creates GitHub Release with install.yaml
-4. Creates PR to update FBC catalogs
+
+For detailed release procedures, see [docs/RELEASE.md](docs/RELEASE.md).
 
 ---
 

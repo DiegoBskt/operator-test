@@ -1,5 +1,11 @@
-# Image URL to use all building/pushing image targets
-IMG ?= ghcr.io/diegobskt/cluster-assessment-operator:v1.2.10
+# VERSION - Single source of truth, read from VERSION file
+VERSION ?= $(shell cat VERSION 2>/dev/null || echo "0.0.0")
+
+# Image URLs - all derived from VERSION
+REGISTRY ?= ghcr.io/diegobskt
+OPERATOR_NAME ?= cluster-assessment-operator
+IMG ?= $(REGISTRY)/$(OPERATOR_NAME):v$(VERSION)
+CONSOLE_IMG ?= $(REGISTRY)/$(OPERATOR_NAME)-console:v$(VERSION)
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -20,6 +26,36 @@ all: build
 .PHONY: help
 help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+
+.PHONY: version
+version: ## Show current version from VERSION file.
+	@echo "$(VERSION)"
+
+##@ Version Management
+
+.PHONY: update-manifests
+update-manifests: ## Update all manifests with current VERSION.
+	@echo "Updating manifests to v$(VERSION)..."
+	@sed -i '' 's|image: $(REGISTRY)/$(OPERATOR_NAME):v[0-9.]*|image: $(REGISTRY)/$(OPERATOR_NAME):v$(VERSION)|g' config/manager/manager.yaml
+	@sed -i '' 's|image: $(REGISTRY)/$(OPERATOR_NAME)-console:v[0-9.]*|image: $(REGISTRY)/$(OPERATOR_NAME)-console:v$(VERSION)|g' config/console-plugin/deployment.yaml
+	@sed -i '' 's|containerImage: $(REGISTRY)/$(OPERATOR_NAME):v[0-9.]*|containerImage: $(REGISTRY)/$(OPERATOR_NAME):v$(VERSION)|g' bundle/manifests/cluster-assessment-operator.clusterserviceversion.yaml
+	@echo "Manifests updated to v$(VERSION)"
+
+.PHONY: update-catalogs
+update-catalogs: ## Update FBC catalog templates with current VERSION.
+	@./scripts/update-catalogs.sh $(VERSION)
+
+.PHONY: release-prep
+release-prep: update-manifests update-catalogs catalogs catalog-validate ## Prepare for release: update all manifests and catalogs.
+	@echo ""
+	@echo "Release preparation complete for v$(VERSION)"
+	@echo "Next steps:"
+	@echo "  1. Review changes: git diff"
+	@echo "  2. Commit: git commit -am 'chore: prepare release v$(VERSION)'"
+	@echo "  3. Tag: git tag v$(VERSION)"
+	@echo "  4. Push: git push origin main v$(VERSION)"
+
+
 
 ##@ Development
 
@@ -121,7 +157,7 @@ release-manifests: ## Generate release manifests.
 bundle: release-manifests ## Generate bundle for OLM.
 	cp config/crd/bases/*.yaml bundle/manifests/
 
-BUNDLE_IMG ?= ghcr.io/diegobskt/cluster-assessment-operator-bundle:v1.2.10
+BUNDLE_IMG ?= $(REGISTRY)/$(OPERATOR_NAME)-bundle:v$(VERSION)
 
 .PHONY: bundle-build
 bundle-build: ## Build the bundle image for amd64.
@@ -144,11 +180,10 @@ bundle-buildx: ## Build and push multi-arch bundle (amd64 + arm64).
 	podman build --platform linux/arm64 -f bundle.Dockerfile --manifest $(BUNDLE_IMG) .
 	podman manifest push --all $(BUNDLE_IMG)
 
-CATALOG_IMG ?= ghcr.io/diegobskt/cluster-assessment-operator-catalog
+CATALOG_IMG ?= $(REGISTRY)/$(OPERATOR_NAME)-catalog
 
 # OCP versions to build catalogs for (Red Hat OperatorHub requirement)
 OCP_VERSIONS ?= v4.12 v4.13 v4.14 v4.15 v4.16 v4.17 v4.18 v4.19 v4.20
-OPERATOR_NAME ?= cluster-assessment-operator
 
 ##@ File Based Catalog (FBC) - Red Hat OperatorHub Compatible
 
