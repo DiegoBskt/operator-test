@@ -27,9 +27,21 @@ All other version references are derived from this file via Makefile variables.
 | `Makefile` | Reads VERSION, sets `IMG`, `BUNDLE_IMG`, etc. | Automatic |
 | `config/manager/manager.yaml` | Operator deployment image | `make update-manifests` |
 | `config/console-plugin/deployment.yaml` | Console plugin image | `make update-manifests` |
-| `bundle/manifests/*.yaml` | OLM bundle CSV | `make update-manifests` |
+| `bundle/manifests/*.yaml` | OLM bundle CSV (name, version, images) | `make update-manifests` |
 | `catalog-templates/*.yaml` | FBC catalog templates | `make update-catalogs` |
 | `CHANGELOG.md` | Release notes | Manual |
+
+> [!IMPORTANT]
+> **Bundle CSV Version is Critical for OLM**
+> 
+> The bundle CSV file (`bundle/manifests/cluster-assessment-operator.clusterserviceversion.yaml`) must have:
+> - `metadata.name: cluster-assessment-operator.v<VERSION>` 
+> - `spec.version: <VERSION>`
+> 
+> If these don't match the release version, OLM catalogs will fail with errors like:
+> `bundle "cluster-assessment-operator.vX.Y.Z" not found in any channel entries`
+>
+> The `make update-manifests` command now automatically updates these fields.
 
 ---
 
@@ -61,9 +73,13 @@ make version
 
 ```bash
 # This updates:
-# - config/manager/manager.yaml
-# - config/console-plugin/deployment.yaml  
-# - bundle/manifests/cluster-assessment-operator.clusterserviceversion.yaml
+# - config/manager/manager.yaml (operator image)
+# - config/console-plugin/deployment.yaml (console plugin image)
+# - bundle/manifests/cluster-assessment-operator.clusterserviceversion.yaml:
+#   - metadata.name (cluster-assessment-operator.v<VERSION>)
+#   - spec.version (<VERSION>)
+#   - containerImage annotation
+#   - olm.skipRange annotation
 make update-manifests
 ```
 
@@ -245,6 +261,29 @@ make version
 
 # Check manifest images
 grep -r "image:.*cluster-assessment-operator" config/
+
+# CRITICAL: Check bundle CSV version (must match release version for OLM)
+grep "name: cluster-assessment-operator.v" bundle/manifests/cluster-assessment-operator.clusterserviceversion.yaml | head -1
+grep "^  version:" bundle/manifests/cluster-assessment-operator.clusterserviceversion.yaml
+```
+
+### OLM Catalog Error: "bundle not found in any channel entries"
+
+This error occurs when the bundle CSV version doesn't match the channel entries:
+
+```bash
+# Error example:
+# package "cluster-assessment-operator", bundle "cluster-assessment-operator.v1.2.0" 
+# not found in any channel entries
+
+# Solution: Ensure bundle CSV version matches the release
+echo "1.3.0" > VERSION
+make update-manifests  # This now updates CSV name and version
+make update-catalogs
+
+# Verify:
+grep "name: cluster-assessment-operator.v" bundle/manifests/cluster-assessment-operator.clusterserviceversion.yaml
+# Should show: name: cluster-assessment-operator.v1.3.0
 ```
 
 ---

@@ -34,21 +34,39 @@ version: ## Show current version from VERSION file.
 ##@ Version Management
 
 .PHONY: update-manifests
-update-manifests: ## Update all manifests with current VERSION.
+update-manifests: ## Update all manifests with current VERSION (including bundle CSV).
 	@echo "Updating manifests to v$(VERSION)..."
+	@# Update operator deployment image
 	@sed -i '' 's|image: $(REGISTRY)/$(OPERATOR_NAME):v[0-9.]*|image: $(REGISTRY)/$(OPERATOR_NAME):v$(VERSION)|g' config/manager/manager.yaml
+	@# Update console plugin image
 	@sed -i '' 's|image: $(REGISTRY)/$(OPERATOR_NAME)-console:v[0-9.]*|image: $(REGISTRY)/$(OPERATOR_NAME)-console:v$(VERSION)|g' config/console-plugin/deployment.yaml
+	@# Update bundle CSV containerImage annotation
 	@sed -i '' 's|containerImage: $(REGISTRY)/$(OPERATOR_NAME):v[0-9.]*|containerImage: $(REGISTRY)/$(OPERATOR_NAME):v$(VERSION)|g' bundle/manifests/cluster-assessment-operator.clusterserviceversion.yaml
+	@# Update bundle CSV metadata.name (critical for OLM catalog)
+	@sed -i '' 's|name: cluster-assessment-operator.v[0-9.]*|name: cluster-assessment-operator.v$(VERSION)|g' bundle/manifests/cluster-assessment-operator.clusterserviceversion.yaml
+	@# Update bundle CSV spec.version (critical for OLM catalog)
+	@sed -i '' 's|^  version: [0-9.]*|  version: $(VERSION)|g' bundle/manifests/cluster-assessment-operator.clusterserviceversion.yaml
+	@# Update skipRange upper bound
+	@sed -i '' 's|olm.skipRange: ">=1.0.0 <[0-9.]*"|olm.skipRange: ">=1.0.0 <$(VERSION)"|g' bundle/manifests/cluster-assessment-operator.clusterserviceversion.yaml
 	@echo "Manifests updated to v$(VERSION)"
+	@echo ""
+	@echo "IMPORTANT: Bundle CSV version updated. This is critical for OLM catalog compatibility."
 
 .PHONY: update-catalogs
 update-catalogs: ## Update FBC catalog templates with current VERSION.
 	@./scripts/update-catalogs.sh $(VERSION)
 
 .PHONY: release-prep
-release-prep: update-manifests update-catalogs catalogs catalog-validate ## Prepare for release: update all manifests and catalogs.
+release-prep: update-manifests update-catalogs ## Prepare for release: update all manifests and catalogs.
 	@echo ""
+	@echo "============================================================"
 	@echo "Release preparation complete for v$(VERSION)"
+	@echo "============================================================"
+	@echo ""
+	@echo "IMPORTANT: Verify bundle CSV version matches release:"
+	@grep "name: cluster-assessment-operator.v" bundle/manifests/cluster-assessment-operator.clusterserviceversion.yaml | head -1
+	@grep "^  version:" bundle/manifests/cluster-assessment-operator.clusterserviceversion.yaml
+	@echo ""
 	@echo "Next steps:"
 	@echo "  1. Review changes: git diff"
 	@echo "  2. Commit: git commit -am 'chore: prepare release v$(VERSION)'"

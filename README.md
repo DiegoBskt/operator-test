@@ -498,7 +498,7 @@ The project uses centralized version management via the `VERSION` file:
 # 1. Update VERSION file
 echo "1.3.0" > VERSION
 
-# 2. Prepare release (updates all manifests and catalogs)
+# 2. Prepare release (updates all manifests, bundle CSV, and catalogs)
 make release-prep
 
 # 3. Update CHANGELOG.md
@@ -509,6 +509,10 @@ git commit -m "chore: prepare release v1.3.0"
 git tag v1.3.0
 git push origin main v1.3.0
 ```
+
+> [!IMPORTANT]
+> The `make release-prep` command updates the bundle CSV `metadata.name` and `spec.version` fields.
+> These **must match** the release version for OLM catalogs to work correctly.
 
 This triggers the CI pipeline which:
 1. Builds multi-arch operator + bundle + console plugin images
