@@ -141,11 +141,56 @@ rules:
       - list
       - watch
 
+  # Image Registry Operator resources (read-only)
+  - apiGroups:
+      - imageregistry.operator.openshift.io
+    resources:
+      - configs
+      - imagepruners
+    verbs:
+      - get
+      - list
+      - watch
+
   # Monitoring resources (read-only)
   - apiGroups:
       - monitoring.coreos.com
     resources:
       - "*"
+    verbs:
+      - get
+      - list
+      - watch
+
+  # Logging Operator resources (read-only)
+  - apiGroups:
+      - logging.openshift.io
+    resources:
+      - clusterloggings
+      - clusterlogforwarders
+    verbs:
+      - get
+      - list
+      - watch
+
+  # OADP Operator resources (read-only)
+  - apiGroups:
+      - oadp.openshift.io
+    resources:
+      - dataprotectionapplications
+    verbs:
+      - get
+      - list
+      - watch
+
+  # OLM Operator resources (read-only)
+  - apiGroups:
+      - operators.coreos.com
+    resources:
+      - subscriptions
+      - clusterserviceversions
+      - installplans
+      - catalogsources
     verbs:
       - get
       - list
