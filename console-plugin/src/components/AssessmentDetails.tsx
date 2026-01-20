@@ -27,12 +27,23 @@ import {
     ExclamationTriangleIcon,
     InfoCircleIcon,
 } from '@patternfly/react-icons';
-import { useK8sWatchResource } from '@openshift-console/dynamic-plugin-sdk';
+import { useK8sWatchResource, k8sPatch, K8sModel } from '@openshift-console/dynamic-plugin-sdk';
 import { Link } from 'react-router-dom';
 import { ClusterAssessment } from '../types';
 import { ScoreGauge } from './ScoreGauge';
 import { FindingsTable } from './FindingsTable';
 import './styles.css';
+
+const clusterAssessmentModel: K8sModel = {
+    apiVersion: 'v1alpha1',
+    apiGroup: 'assessment.openshift.io',
+    kind: 'ClusterAssessment',
+    plural: 'clusterassessments',
+    abbr: 'CA',
+    label: 'Cluster Assessment',
+    labelPlural: 'Cluster Assessments',
+    namespaced: false,
+};
 
 const clusterAssessmentResource = (name: string) => ({
     groupVersionKind: {
@@ -47,10 +58,47 @@ const clusterAssessmentResource = (name: string) => ({
 export default function AssessmentDetails() {
     const { name } = useParams<{ name: string }>();
     const [activeTabKey, setActiveTabKey] = React.useState<string | number>(0);
+    const [isRerunning, setIsRerunning] = React.useState(false);
+
+    // Memoize resource config to prevent watch resets on re-renders
+    const resourceConfig = React.useMemo(
+        () => clusterAssessmentResource(name || ''),
+        [name]
+    );
 
     const [assessment, loaded, error] = useK8sWatchResource<ClusterAssessment>(
-        clusterAssessmentResource(name)
+        resourceConfig
     );
+
+    // Handle re-run assessment
+    const handleRerun = async () => {
+        if (!assessment || !name) return;
+
+        setIsRerunning(true);
+        try {
+            // Patch the status phase to 'Pending' to trigger re-run
+            await k8sPatch({
+                model: clusterAssessmentModel,
+                resource: assessment,
+                data: [
+                    {
+                        op: 'replace',
+                        path: '/status/phase',
+                        value: 'Pending',
+                    },
+                    {
+                        op: 'remove',
+                        path: '/status/findings',
+                    },
+                ],
+                path: 'status',
+            });
+        } catch (err) {
+            console.error('Failed to re-run assessment:', err);
+        } finally {
+            setIsRerunning(false);
+        }
+    };
 
     if (error) {
         return (
@@ -128,8 +176,14 @@ export default function AssessmentDetails() {
                         </Flex>
                     </SplitItem>
                     <SplitItem>
-                        <Button variant="secondary" icon={<SyncIcon />}>
-                            Re-run Assessment
+                        <Button
+                            variant="secondary"
+                            icon={<SyncIcon />}
+                            onClick={handleRerun}
+                            isLoading={isRerunning}
+                            isDisabled={isRerunning || assessment?.status?.phase === 'Running'}
+                        >
+                            {isRerunning ? 'Re-running...' : 'Re-run Assessment'}
                         </Button>
                     </SplitItem>
                 </Split>
