@@ -23,6 +23,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	assessmentv1alpha1 "github.com/openshift-assessment/cluster-assessment-operator/api/v1alpha1"
+	"github.com/openshift-assessment/cluster-assessment-operator/pkg/version"
 )
 
 // Report represents the full assessment report structure.
@@ -80,7 +81,7 @@ func buildReport(assessment *assessmentv1alpha1.ClusterAssessment) Report {
 			GeneratedAt:     time.Now(),
 			AssessmentName:  assessment.Name,
 			Profile:         assessment.Spec.Profile,
-			OperatorVersion: "1.0.0", // TODO: Get from build info
+			OperatorVersion: version.Version,
 		},
 		ClusterInfo:        assessment.Status.ClusterInfo,
 		Summary:            assessment.Status.Summary,
