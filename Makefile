@@ -39,7 +39,7 @@ version: ## Show current version.
 
 .PHONY: build
 build: fmt vet ## Build manager binary.
-	go build -o bin/manager main.go
+	go build -ldflags "-X github.com/openshift-assessment/cluster-assessment-operator/pkg/version.Version=$(VERSION)" -o bin/manager main.go
 
 .PHONY: run
 run: fmt vet ## Run controller locally (for development).
@@ -198,7 +198,7 @@ update-catalogs: ## Update catalog templates with current VERSION.
 
 .PHONY: image-build
 image-build: ## Build operator image (amd64).
-	podman build --platform linux/amd64 -t $(IMG) .
+	podman build --platform linux/amd64 --build-arg VERSION=$(VERSION) -t $(IMG) .
 
 .PHONY: image-push
 image-push: ## Push operator image.
@@ -208,8 +208,8 @@ image-push: ## Push operator image.
 image-buildx: ## Build and push multi-arch operator image (amd64 + arm64).
 	-podman manifest rm $(IMG) 2>/dev/null || true
 	podman manifest create $(IMG)
-	podman build --platform linux/amd64 --manifest $(IMG) .
-	podman build --platform linux/arm64 --manifest $(IMG) .
+	podman build --platform linux/amd64 --build-arg VERSION=$(VERSION) --manifest $(IMG) .
+	podman build --platform linux/arm64 --build-arg VERSION=$(VERSION) --manifest $(IMG) .
 	podman manifest push --all $(IMG)
 
 .PHONY: bundle-build

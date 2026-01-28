@@ -2,6 +2,7 @@
 FROM --platform=$BUILDPLATFORM golang:1.25 AS builder
 ARG TARGETOS
 ARG TARGETARCH
+ARG VERSION=0.0.0
 
 WORKDIR /workspace
 
@@ -22,15 +23,17 @@ COPY pkg/ pkg/
 COPY LICENSE LICENSE
 
 # Build for target platform
-RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} go build -a -o manager main.go
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} go build -ldflags "-X github.com/openshift-assessment/cluster-assessment-operator/pkg/version.Version=${VERSION}" -a -o manager main.go
 
 # Use Red Hat UBI minimal as base image for Red Hat certification
 FROM registry.access.redhat.com/ubi9/ubi-micro:latest
 
+ARG VERSION=0.0.0
+
 # Required labels for Red Hat certification
 LABEL name="cluster-assessment-operator" \
     vendor="Community" \
-    version="1.0.0" \
+    version="${VERSION}" \
     release="1" \
     summary="OpenShift Cluster Assessment Operator" \
     description="Read-only operator that performs assessments of OpenShift cluster configuration and generates reports with findings and recommendations." \
