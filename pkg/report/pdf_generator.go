@@ -253,8 +253,14 @@ func addDetailedFindings(pdf *gofpdf.Fpdf, assessment *assessmentv1alpha1.Cluste
 		assessmentv1alpha1.FindingStatusPass,
 	}
 
+	// Optimization: Group findings by status in a single pass (O(N)) instead of repeated filtering (O(4N))
+	findingsByStatus := make(map[assessmentv1alpha1.FindingStatus][]assessmentv1alpha1.Finding)
+	for _, f := range assessment.Status.Findings {
+		findingsByStatus[f.Status] = append(findingsByStatus[f.Status], f)
+	}
+
 	for _, status := range statusOrder {
-		findings := filterByStatus(assessment.Status.Findings, status)
+		findings := findingsByStatus[status]
 		if len(findings) == 0 {
 			continue
 		}
@@ -267,16 +273,6 @@ func addDetailedFindings(pdf *gofpdf.Fpdf, assessment *assessmentv1alpha1.Cluste
 		}
 		pdf.Ln(5)
 	}
-}
-
-func filterByStatus(findings []assessmentv1alpha1.Finding, status assessmentv1alpha1.FindingStatus) []assessmentv1alpha1.Finding {
-	var result []assessmentv1alpha1.Finding
-	for _, f := range findings {
-		if f.Status == status {
-			result = append(result, f)
-		}
-	}
-	return result
 }
 
 func addStatusHeader(pdf *gofpdf.Fpdf, status assessmentv1alpha1.FindingStatus, count int) {
@@ -475,11 +471,14 @@ func GenerateHTML(assessment *assessmentv1alpha1.ClusterAssessment) ([]byte, err
 		assessmentv1alpha1.FindingStatusPass,
 	}
 
+	// Group findings by status
+	findingsByStatus := make(map[assessmentv1alpha1.FindingStatus][]assessmentv1alpha1.Finding)
+	for _, f := range assessment.Status.Findings {
+		findingsByStatus[f.Status] = append(findingsByStatus[f.Status], f)
+	}
+
 	for _, status := range statusOrder {
-		for _, f := range assessment.Status.Findings {
-			if f.Status != status {
-				continue
-			}
+		for _, f := range findingsByStatus[status] {
 			buf.WriteString(fmt.Sprintf(`<div class="finding status-%s">`, f.Status))
 			buf.WriteString(fmt.Sprintf(`<div class="finding-title">[%s] %s</div>`, f.Status, f.Title))
 			buf.WriteString(fmt.Sprintf(`<div class="finding-desc">%s</div>`, f.Description))
