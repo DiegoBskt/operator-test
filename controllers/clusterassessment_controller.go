@@ -19,9 +19,16 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/robfig/cron/v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -497,15 +504,175 @@ func (r *ClusterAssessmentReconciler) storeReportInConfigMap(ctx context.Context
 
 // exportToGit exports the report to a Git repository.
 func (r *ClusterAssessmentReconciler) exportToGit(ctx context.Context, assessment *assessmentv1alpha1.ClusterAssessment) error {
-	// Git export will be implemented using go-git
-	// For now, log that it would export
 	logger := log.FromContext(ctx)
-	logger.Info("Git export requested",
-		"url", assessment.Spec.ReportStorage.Git.URL,
-		"branch", assessment.Spec.ReportStorage.Git.Branch,
-		"path", assessment.Spec.ReportStorage.Git.Path)
+	gitSpec := assessment.Spec.ReportStorage.Git
 
-	// TODO: Implement Git export using go-git
+	logger.Info("Git export requested",
+		"url", gitSpec.URL,
+		"branch", gitSpec.Branch,
+		"path", gitSpec.Path)
+
+	// Retrieve credentials if SecretRef is provided
+	var auth *http.BasicAuth
+	if gitSpec.SecretRef != "" {
+		namespace := os.Getenv("POD_NAMESPACE")
+		if namespace == "" {
+			namespace = "cluster-assessment-operator"
+		}
+
+		secret := &corev1.Secret{}
+		err := r.Get(ctx, client.ObjectKey{
+			Name:      gitSpec.SecretRef,
+			Namespace: namespace,
+		}, secret)
+		if err != nil {
+			return fmt.Errorf("failed to get git secret: %w", err)
+		}
+
+		username := string(secret.Data["username"])
+		password := string(secret.Data["password"])
+		if password == "" {
+			password = string(secret.Data["token"])
+		}
+
+		if username != "" && password != "" {
+			auth = &http.BasicAuth{
+				Username: username,
+				Password: password,
+			}
+		}
+	}
+
+	// Create temporary directory for cloning
+	tempDir, err := os.MkdirTemp("", "git-export-*")
+	if err != nil {
+		return fmt.Errorf("failed to create temp dir: %w", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Determine branch
+	branch := gitSpec.Branch
+	if branch == "" {
+		branch = "main"
+	}
+
+	// Clone the repository
+	cloneOptions := &git.CloneOptions{
+		URL:  gitSpec.URL,
+		Auth: auth,
+	}
+
+	repo, err := git.PlainClone(tempDir, false, cloneOptions)
+	if err != nil {
+		return fmt.Errorf("failed to clone repository: %w", err)
+	}
+
+	worktree, err := repo.Worktree()
+	if err != nil {
+		return fmt.Errorf("failed to get worktree: %w", err)
+	}
+
+	// Checkout branch
+	// Try to checkout the branch if it exists, otherwise create it
+	err = worktree.Checkout(&git.CheckoutOptions{
+		Branch: plumbing.NewBranchReferenceName(branch),
+	})
+	if err != nil {
+		// If checkout failed, maybe branch doesn't exist locally.
+		// Try to create it.
+		err = worktree.Checkout(&git.CheckoutOptions{
+			Branch: plumbing.NewBranchReferenceName(branch),
+			Create: true,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to checkout branch %s: %w", branch, err)
+		}
+	}
+
+	// Prepare target path
+	targetDir := tempDir
+	if gitSpec.Path != "" {
+		// Security check: ensure path is relative and stays within tempDir
+		cleanPath := filepath.Clean(gitSpec.Path)
+		if filepath.IsAbs(cleanPath) || strings.HasPrefix(cleanPath, "..") {
+			return fmt.Errorf("invalid path: %s", gitSpec.Path)
+		}
+		targetDir = filepath.Join(tempDir, cleanPath)
+		if !strings.HasPrefix(targetDir, tempDir) {
+			return fmt.Errorf("invalid path leads outside temp dir: %s", gitSpec.Path)
+		}
+	}
+
+	if err := os.MkdirAll(targetDir, 0755); err != nil {
+		return fmt.Errorf("failed to create target directory: %w", err)
+	}
+
+	// Generate and write reports
+	// JSON
+	jsonReport, err := report.GenerateJSON(assessment)
+	if err != nil {
+		return fmt.Errorf("failed to generate JSON report: %w", err)
+	}
+	if err := os.WriteFile(filepath.Join(targetDir, "report.json"), jsonReport, 0644); err != nil {
+		return fmt.Errorf("failed to write JSON report: %w", err)
+	}
+
+	// HTML
+	htmlReport, err := report.GenerateHTML(assessment)
+	if err != nil {
+		return fmt.Errorf("failed to generate HTML report: %w", err)
+	}
+	if err := os.WriteFile(filepath.Join(targetDir, "report.html"), htmlReport, 0644); err != nil {
+		return fmt.Errorf("failed to write HTML report: %w", err)
+	}
+
+	// PDF
+	pdfReport, err := report.GeneratePDF(assessment)
+	if err != nil {
+		return fmt.Errorf("failed to generate PDF report: %w", err)
+	}
+	if err := os.WriteFile(filepath.Join(targetDir, "report.pdf"), pdfReport, 0644); err != nil {
+		return fmt.Errorf("failed to write PDF report: %w", err)
+	}
+
+	// Git Add, Commit, Push
+	if _, err := worktree.Add("."); err != nil {
+		return fmt.Errorf("failed to git add: %w", err)
+	}
+
+	status, err := worktree.Status()
+	if err != nil {
+		return fmt.Errorf("failed to get git status: %w", err)
+	}
+
+	if status.IsClean() {
+		logger.Info("No changes to commit")
+		return nil
+	}
+
+	commitMsg := fmt.Sprintf("Update assessment report for %s\n\nGenerated at %s", assessment.Name, time.Now().Format(time.RFC3339))
+	_, err = worktree.Commit(commitMsg, &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  "Cluster Assessment Operator",
+			Email: "support@redhat.com",
+			When:  time.Now(),
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to commit: %w", err)
+	}
+
+	// Use explicit RefSpec to ensure the correct branch is pushed
+	refSpec := config.RefSpec(fmt.Sprintf("refs/heads/%s:refs/heads/%s", branch, branch))
+	pushOptions := &git.PushOptions{
+		Auth:     auth,
+		RefSpecs: []config.RefSpec{refSpec},
+	}
+	if err := repo.Push(pushOptions); err != nil {
+		return fmt.Errorf("failed to push to repository: %w", err)
+	}
+
+	logger.Info("Successfully exported report to Git", "url", gitSpec.URL, "branch", branch)
 	return nil
 }
 
