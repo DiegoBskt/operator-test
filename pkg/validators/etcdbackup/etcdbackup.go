@@ -23,6 +23,7 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -163,45 +164,56 @@ func (v *EtcdBackupValidator) checkBackupCronJobs(ctx context.Context, c client.
 	}
 
 	// Check for backup CronJobs in any namespace
+	// Optimized: List metadata only first to avoid fetching full objects for all CronJobs
 	cronJobGVK := schema.GroupVersionKind{
 		Group:   "batch",
 		Version: "v1",
 		Kind:    "CronJobList",
 	}
 
-	cronJobList := &unstructured.UnstructuredList{}
+	cronJobList := &metav1.PartialObjectMetadataList{}
 	cronJobList.SetGroupVersionKind(cronJobGVK)
 
 	if err := c.List(ctx, cronJobList); err == nil {
-		for _, cj := range cronJobList.Items {
-			name, _, _ := unstructured.NestedString(cj.Object, "metadata", "name")
-			namespace, _, _ := unstructured.NestedString(cj.Object, "metadata", "namespace")
+		for _, item := range cronJobList.Items {
+			name := item.Name
+			namespace := item.Namespace
 
 			// Check for backup-related CronJobs
 			if containsBackupKeyword(name) {
-				lastSchedule, found, _ := unstructured.NestedString(cj.Object, "status", "lastScheduleTime")
+				// Fetch full object to check status
+				cj := &unstructured.Unstructured{}
+				cj.SetGroupVersionKind(schema.GroupVersionKind{
+					Group:   "batch",
+					Version: "v1",
+					Kind:    "CronJob",
+				})
+				key := client.ObjectKey{Namespace: namespace, Name: name}
+				if err := c.Get(ctx, key, cj); err == nil {
+					lastSchedule, found, _ := unstructured.NestedString(cj.Object, "status", "lastScheduleTime")
 
-				status := assessmentv1alpha1.FindingStatusPass
-				desc := fmt.Sprintf("Backup CronJob found: %s/%s", namespace, name)
+					status := assessmentv1alpha1.FindingStatusPass
+					desc := fmt.Sprintf("Backup CronJob found: %s/%s", namespace, name)
 
-				if found && lastSchedule != "" {
-					// Parse last schedule time to check if it's recent
-					if t, err := time.Parse(time.RFC3339, lastSchedule); err == nil {
-						if time.Since(t) > 7*24*time.Hour {
-							status = assessmentv1alpha1.FindingStatusWarn
-							desc = fmt.Sprintf("Backup CronJob %s/%s hasn't run in over 7 days", namespace, name)
+					if found && lastSchedule != "" {
+						// Parse last schedule time to check if it's recent
+						if t, err := time.Parse(time.RFC3339, lastSchedule); err == nil {
+							if time.Since(t) > 7*24*time.Hour {
+								status = assessmentv1alpha1.FindingStatusWarn
+								desc = fmt.Sprintf("Backup CronJob %s/%s hasn't run in over 7 days", namespace, name)
+							}
 						}
 					}
-				}
 
-				findings = append(findings, assessmentv1alpha1.Finding{
-					ID:          fmt.Sprintf("etcdbackup-cronjob-%s-%s", namespace, name),
-					Validator:   validatorName,
-					Category:    validatorCategory,
-					Status:      status,
-					Title:       "Backup CronJob Detected",
-					Description: desc,
-				})
+					findings = append(findings, assessmentv1alpha1.Finding{
+						ID:          fmt.Sprintf("etcdbackup-cronjob-%s-%s", namespace, name),
+						Validator:   validatorName,
+						Category:    validatorCategory,
+						Status:      status,
+						Title:       "Backup CronJob Detected",
+						Description: desc,
+					})
+				}
 			}
 		}
 	}
