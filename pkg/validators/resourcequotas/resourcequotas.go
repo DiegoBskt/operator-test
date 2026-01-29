@@ -23,6 +23,8 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	assessmentv1alpha1 "github.com/openshift-assessment/cluster-assessment-operator/api/v1alpha1"
@@ -62,22 +64,15 @@ func (v *ResourceQuotasValidator) Category() string {
 func (v *ResourceQuotasValidator) Validate(ctx context.Context, c client.Client, profile profiles.Profile) ([]assessmentv1alpha1.Finding, error) {
 	var findings []assessmentv1alpha1.Finding
 
-	// Check 1: ResourceQuota coverage
-	findings = append(findings, v.checkResourceQuotas(ctx, c, profile)...)
+	// Optimized: List namespaces once using PartialObjectMetadataList
+	nsList := &metav1.PartialObjectMetadataList{}
+	nsList.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "",
+		Version: "v1",
+		Kind:    "NamespaceList",
+	})
 
-	// Check 2: LimitRange coverage
-	findings = append(findings, v.checkLimitRanges(ctx, c, profile)...)
-
-	return findings, nil
-}
-
-// checkResourceQuotas checks ResourceQuota configuration across namespaces.
-func (v *ResourceQuotasValidator) checkResourceQuotas(ctx context.Context, c client.Client, profile profiles.Profile) []assessmentv1alpha1.Finding {
-	var findings []assessmentv1alpha1.Finding
-
-	// Get all namespaces
-	namespaces := &corev1.NamespaceList{}
-	if err := c.List(ctx, namespaces); err != nil {
+	if err := c.List(ctx, nsList); err != nil {
 		return []assessmentv1alpha1.Finding{{
 			ID:          "resourcequotas-ns-error",
 			Validator:   validatorName,
@@ -85,8 +80,30 @@ func (v *ResourceQuotasValidator) checkResourceQuotas(ctx context.Context, c cli
 			Status:      assessmentv1alpha1.FindingStatusFail,
 			Title:       "Unable to Check Namespaces",
 			Description: fmt.Sprintf("Failed to list namespaces: %v", err),
-		}}
+		}}, nil
 	}
+
+	var userNamespaces []string
+	for _, ns := range nsList.Items {
+		// Skip system namespaces
+		if strings.HasPrefix(ns.Name, "openshift-") || strings.HasPrefix(ns.Name, "kube-") || ns.Name == "default" {
+			continue
+		}
+		userNamespaces = append(userNamespaces, ns.Name)
+	}
+
+	// Check 1: ResourceQuota coverage
+	findings = append(findings, v.checkResourceQuotas(ctx, c, profile, userNamespaces)...)
+
+	// Check 2: LimitRange coverage
+	findings = append(findings, v.checkLimitRanges(ctx, c, profile, userNamespaces)...)
+
+	return findings, nil
+}
+
+// checkResourceQuotas checks ResourceQuota configuration across namespaces.
+func (v *ResourceQuotasValidator) checkResourceQuotas(ctx context.Context, c client.Client, profile profiles.Profile, userNamespaces []string) []assessmentv1alpha1.Finding {
+	var findings []assessmentv1alpha1.Finding
 
 	// Get all ResourceQuotas
 	quotas := &corev1.ResourceQuotaList{}
@@ -110,15 +127,10 @@ func (v *ResourceQuotasValidator) checkResourceQuotas(ctx context.Context, c cli
 	var userNamespacesWithoutQuota []string
 	var nearLimitQuotas []string
 
-	for _, ns := range namespaces.Items {
-		// Skip system namespaces
-		if strings.HasPrefix(ns.Name, "openshift-") || strings.HasPrefix(ns.Name, "kube-") || ns.Name == "default" {
-			continue
-		}
-
-		quotasInNs, hasQuota := nsWithQuota[ns.Name]
+	for _, nsName := range userNamespaces {
+		quotasInNs, hasQuota := nsWithQuota[nsName]
 		if !hasQuota {
-			userNamespacesWithoutQuota = append(userNamespacesWithoutQuota, ns.Name)
+			userNamespacesWithoutQuota = append(userNamespacesWithoutQuota, nsName)
 		} else {
 			// Check quota utilization
 			for _, quota := range quotasInNs {
@@ -133,7 +145,7 @@ func (v *ResourceQuotasValidator) checkResourceQuotas(ctx context.Context, c cli
 						utilization := float64(used.Value()) / float64(hard.Value()) * 100
 						if utilization >= 80 {
 							nearLimitQuotas = append(nearLimitQuotas,
-								fmt.Sprintf("%s/%s (%s: %.0f%%)", ns.Name, quota.Name, resourceName, utilization))
+								fmt.Sprintf("%s/%s (%s: %.0f%%)", nsName, quota.Name, resourceName, utilization))
 						}
 					}
 				}
@@ -201,14 +213,8 @@ func (v *ResourceQuotasValidator) checkResourceQuotas(ctx context.Context, c cli
 }
 
 // checkLimitRanges checks LimitRange configuration across namespaces.
-func (v *ResourceQuotasValidator) checkLimitRanges(ctx context.Context, c client.Client, profile profiles.Profile) []assessmentv1alpha1.Finding {
+func (v *ResourceQuotasValidator) checkLimitRanges(ctx context.Context, c client.Client, profile profiles.Profile, userNamespaces []string) []assessmentv1alpha1.Finding {
 	var findings []assessmentv1alpha1.Finding
-
-	// Get all namespaces
-	namespaces := &corev1.NamespaceList{}
-	if err := c.List(ctx, namespaces); err != nil {
-		return findings
-	}
 
 	// Get all LimitRanges
 	limitRanges := &corev1.LimitRangeList{}
@@ -225,14 +231,9 @@ func (v *ResourceQuotasValidator) checkLimitRanges(ctx context.Context, c client
 	var userNamespacesWithoutLR []string
 	var veryHighDefaultLimits []string
 
-	for _, ns := range namespaces.Items {
-		// Skip system namespaces
-		if strings.HasPrefix(ns.Name, "openshift-") || strings.HasPrefix(ns.Name, "kube-") || ns.Name == "default" {
-			continue
-		}
-
-		if !nsWithLimitRange[ns.Name] {
-			userNamespacesWithoutLR = append(userNamespacesWithoutLR, ns.Name)
+	for _, nsName := range userNamespaces {
+		if !nsWithLimitRange[nsName] {
+			userNamespacesWithoutLR = append(userNamespacesWithoutLR, nsName)
 		}
 	}
 
