@@ -34,6 +34,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -353,7 +354,14 @@ func (r *ClusterAssessmentReconciler) collectClusterInfo(ctx context.Context) (a
 	}
 
 	// Count nodes
-	nodes := &corev1.NodeList{}
+	// Optimization: Use PartialObjectMetadataList to avoid fetching full Node objects (Status, Spec)
+	// when we only need labels. This significantly reduces memory usage and API bandwidth.
+	nodes := &metav1.PartialObjectMetadataList{}
+	nodes.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "",
+		Version: "v1",
+		Kind:    "NodeList",
+	})
 	if err := r.List(ctx, nodes); err == nil {
 		info.NodeCount = len(nodes.Items)
 		for _, node := range nodes.Items {
