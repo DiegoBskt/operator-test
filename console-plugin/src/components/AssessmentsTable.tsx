@@ -103,6 +103,7 @@ export default function AssessmentsTable({ assessments }: AssessmentsTableProps)
                             <Button
                                 variant="link"
                                 component={(props: React.HTMLProps<HTMLAnchorElement>) => (
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                     <Link {...props as any} to={`/cluster-assessment/${assessment.metadata.name}`} />
                                 )}
                             >

@@ -3,15 +3,15 @@ import {
     Page,
     PageSection,
     Title,
-    Card,
-    CardTitle,
-    CardBody,
     Grid,
     GridItem,
     Button,
     EmptyState,
     EmptyStateIcon,
     EmptyStateBody,
+    EmptyStateHeader,
+    EmptyStateFooter,
+    EmptyStateActions,
     Spinner,
     Label,
     Split,
@@ -104,20 +104,27 @@ export default function AssessmentDashboard() {
                 />
                 <Page>
                     <PageSection>
-                        <div className="ca-plugin__empty-state">
-                            <SearchIcon className="ca-plugin__empty-icon" />
-                            <h3 className="ca-plugin__empty-title">No Assessments Found</h3>
-                            <p className="ca-plugin__empty-desc">
+                        <EmptyState>
+                            <EmptyStateHeader
+                                titleText="No Assessments Found"
+                                headingLevel="h4"
+                                icon={<EmptyStateIcon icon={SearchIcon} />}
+                            />
+                            <EmptyStateBody>
                                 Create your first cluster assessment to analyze your OpenShift configuration and get actionable recommendations.
-                            </p>
-                            <Button
-                                variant="primary"
-                                icon={<PlusCircleIcon />}
-                                onClick={() => setIsModalOpen(true)}
-                            >
-                                Create Assessment
-                            </Button>
-                        </div>
+                            </EmptyStateBody>
+                            <EmptyStateFooter>
+                                <EmptyStateActions>
+                                    <Button
+                                        variant="primary"
+                                        icon={<PlusCircleIcon />}
+                                        onClick={() => setIsModalOpen(true)}
+                                    >
+                                        Create Assessment
+                                    </Button>
+                                </EmptyStateActions>
+                            </EmptyStateFooter>
+                        </EmptyState>
                     </PageSection>
                 </Page>
             </>

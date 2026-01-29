@@ -127,6 +127,7 @@ export default function CreateAssessmentModal({
                 <FormGroup label="Name" isRequired fieldId="assessment-name">
                     <TextInput
                         isRequired
+                        autoFocus
                         id="assessment-name"
                         value={name}
                         onChange={(_event, value) => setName(value)}
@@ -148,7 +149,7 @@ export default function CreateAssessmentModal({
                         ))}
                     </FormSelect>
                 </FormGroup>
-                <FormGroup label="Report Formats" fieldId="report-formats">
+                <FormGroup label="Report Formats" role="group">
                     <Checkbox
                         id="format-html"
                         label="HTML Report"

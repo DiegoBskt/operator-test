@@ -306,36 +306,6 @@
   margin-bottom: 4px;
 }
 
-/* ============================================
-   Empty State Enhancement
-   ============================================ */
-.ca-plugin__empty-state {
-  text-align: center;
-  padding: 60px 40px;
-  color: var(--ca-text-primary);
-}
-
-.ca-plugin__empty-icon {
-  font-size: 48px;
-  color: var(--ca-text-secondary);
-  margin-bottom: 24px;
-}
-
-.ca-plugin__empty-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--ca-text-primary);
-  margin-bottom: 12px;
-}
-
-.ca-plugin__empty-desc {
-  font-size: 14px;
-  color: var(--ca-text-secondary);
-  margin-bottom: 24px;
-  max-width: 400px;
-  margin-left: auto;
-  margin-right: auto;
-}
 
 /* ============================================
    Status Colors (used in various places)
