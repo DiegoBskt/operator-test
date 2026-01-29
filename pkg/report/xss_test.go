@@ -19,6 +19,7 @@ func TestGenerateHTML_XSS(t *testing.T) {
 					Validator:      "test-validator",
 					Status:         assessmentv1alpha1.FindingStatusFail,
 					Recommendation: "<b>Do not do this</b>",
+					References:     []string{"javascript:alert(1)", "http://good.com"},
 				},
 			},
 			Summary: assessmentv1alpha1.AssessmentSummary{
@@ -33,6 +34,8 @@ func TestGenerateHTML_XSS(t *testing.T) {
 		t.Fatalf("GenerateHTML failed: %v", err)
 	}
 	htmlStr := string(htmlBytes)
+
+	// t.Logf("Generated HTML: %s", htmlStr)
 
 	// Check for unescaped tags - SHOULD NOT EXIST
 	if strings.Contains(htmlStr, "<script>") {
@@ -54,5 +57,10 @@ func TestGenerateHTML_XSS(t *testing.T) {
 	}
 	if !strings.Contains(htmlStr, "&lt;b&gt;") {
 		t.Errorf("HTML should contain escaped b tag")
+	}
+
+	// Check for javascript URL in href - SHOULD NOT EXIST
+	if strings.Contains(htmlStr, "href=\"javascript:alert(1)\"") {
+		t.Errorf("VULNERABILITY CONFIRMED: HTML contains javascript: URL in href")
 	}
 }
