@@ -2,18 +2,10 @@ import * as React from 'react';
 import {
     Table,
     Thead,
-    Tbody,
     Tr,
     Th,
-    Td,
-    ExpandableRowContent,
 } from '@patternfly/react-table';
 import {
-    Label,
-    TextContent,
-    Text,
-    TextVariants,
-    Button,
     Toolbar,
     ToolbarContent,
     ToolbarItem,
@@ -23,46 +15,12 @@ import {
     Pagination,
     PaginationVariant,
 } from '@patternfly/react-core';
-import {
-    CheckCircleIcon,
-    ExclamationTriangleIcon,
-    ExclamationCircleIcon,
-    InfoCircleIcon,
-    ExternalLinkAltIcon,
-} from '@patternfly/react-icons';
 import { Finding } from '../types';
+import { FindingsTableRow } from './FindingsTableRow';
 
 interface FindingsTableProps {
     findings: Finding[];
 }
-
-const getStatusIcon = (status: string) => {
-    switch (status) {
-        case 'PASS':
-            return <CheckCircleIcon color="var(--pf-v5-global--success-color--100)" />;
-        case 'WARN':
-            return <ExclamationTriangleIcon color="var(--pf-v5-global--warning-color--100)" />;
-        case 'FAIL':
-            return <ExclamationCircleIcon color="var(--pf-v5-global--danger-color--100)" />;
-        case 'INFO':
-        default:
-            return <InfoCircleIcon color="var(--pf-v5-global--info-color--100)" />;
-    }
-};
-
-const getStatusLabel = (status: string) => {
-    switch (status) {
-        case 'PASS':
-            return <Label color="green">{status}</Label>;
-        case 'WARN':
-            return <Label color="orange">{status}</Label>;
-        case 'FAIL':
-            return <Label color="red">{status}</Label>;
-        case 'INFO':
-        default:
-            return <Label color="blue">{status}</Label>;
-    }
-};
 
 export default function FindingsTable({ findings }: FindingsTableProps) {
     const [expandedRows, setExpandedRows] = React.useState<{ [key: string]: boolean }>({});
@@ -112,16 +70,16 @@ export default function FindingsTable({ findings }: FindingsTableProps) {
         setPage(1);
     };
 
-    const setRowExpanded = (finding: Finding, isExpanding: boolean) => {
-        const key = finding.title + finding.category;
+    const handleToggle = React.useCallback((finding: Finding, isExpanding: boolean) => {
+        const key = finding.id || (finding.title + finding.category);
         setExpandedRows((prev) => ({
             ...prev,
             [key]: isExpanding,
         }));
-    };
+    }, []);
 
     const isRowExpanded = (finding: Finding) => {
-        const key = finding.title + finding.category;
+        const key = finding.id || (finding.title + finding.category);
         return !!expandedRows[key];
     };
 
@@ -186,69 +144,13 @@ export default function FindingsTable({ findings }: FindingsTableProps) {
                     </Tr>
                 </Thead>
                 {paginatedFindings.map((finding, rowIndex) => (
-                    <Tbody key={rowIndex} isExpanded={isRowExpanded(finding)}>
-                        <Tr>
-                            <Td
-                                expand={{
-                                    rowIndex,
-                                    isExpanded: isRowExpanded(finding),
-                                    onToggle: () => setRowExpanded(finding, !isRowExpanded(finding)),
-                                }}
-                            />
-                            <Td dataLabel="Status">
-                                {getStatusIcon(finding.status)} {getStatusLabel(finding.status)}
-                            </Td>
-                            <Td dataLabel="Category"><Label>{finding.category}</Label></Td>
-                            <Td dataLabel="Finding">{finding.title}</Td>
-                            <Td dataLabel="Resource">
-                                {finding.resource
-                                    ? `${finding.namespace ? `${finding.namespace}/` : ''}${finding.resource}`
-                                    : '-'}
-                            </Td>
-                        </Tr>
-                        <Tr isExpanded={isRowExpanded(finding)}>
-                            <Td colSpan={5}>
-                                <ExpandableRowContent>
-                                    <TextContent>
-                                        <Text component={TextVariants.h4}>Description</Text>
-                                        <Text>{finding.description}</Text>
-                                        {finding.impact && (
-                                            <>
-                                                <Text component={TextVariants.h4}>Impact</Text>
-                                                <Text>{finding.impact}</Text>
-                                            </>
-                                        )}
-                                        {finding.recommendation && (
-                                            <>
-                                                <Text component={TextVariants.h4}>Recommendation</Text>
-                                                <Text>{finding.recommendation}</Text>
-                                            </>
-                                        )}
-                                        {finding.references && finding.references.length > 0 && (
-                                            <>
-                                                <Text component={TextVariants.h4}>References</Text>
-                                                {finding.references.map((ref, i) => (
-                                                    <Button
-                                                        key={i}
-                                                        variant="link"
-                                                        isInline
-                                                        component="a"
-                                                        href={ref}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        icon={<ExternalLinkAltIcon />}
-                                                        iconPosition="end"
-                                                    >
-                                                        {ref}
-                                                    </Button>
-                                                ))}
-                                            </>
-                                        )}
-                                    </TextContent>
-                                </ExpandableRowContent>
-                            </Td>
-                        </Tr>
-                    </Tbody>
+                    <FindingsTableRow
+                        key={finding.id || rowIndex}
+                        finding={finding}
+                        rowIndex={rowIndex}
+                        isExpanded={isRowExpanded(finding)}
+                        onToggle={handleToggle}
+                    />
                 ))}
             </Table>
             <Pagination
