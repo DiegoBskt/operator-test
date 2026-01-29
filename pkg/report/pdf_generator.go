@@ -19,6 +19,7 @@ package report
 import (
 	"bytes"
 	"fmt"
+	"html"
 	"time"
 
 	"github.com/jung-kurt/gofpdf"
@@ -429,14 +430,14 @@ func GenerateHTML(assessment *assessmentv1alpha1.ClusterAssessment) ([]byte, err
 	info := assessment.Status.ClusterInfo
 	buf.WriteString(`<h2>Cluster Information</h2>
 <table class="info-table">`)
-	buf.WriteString(fmt.Sprintf(`<tr><td>Cluster ID</td><td>%s</td></tr>`, info.ClusterID))
-	buf.WriteString(fmt.Sprintf(`<tr><td>OpenShift Version</td><td>%s</td></tr>`, info.ClusterVersion))
-	buf.WriteString(fmt.Sprintf(`<tr><td>Platform</td><td>%s</td></tr>`, info.Platform))
-	buf.WriteString(fmt.Sprintf(`<tr><td>Update Channel</td><td>%s</td></tr>`, info.Channel))
+	buf.WriteString(fmt.Sprintf(`<tr><td>Cluster ID</td><td>%s</td></tr>`, html.EscapeString(info.ClusterID)))
+	buf.WriteString(fmt.Sprintf(`<tr><td>OpenShift Version</td><td>%s</td></tr>`, html.EscapeString(info.ClusterVersion)))
+	buf.WriteString(fmt.Sprintf(`<tr><td>Platform</td><td>%s</td></tr>`, html.EscapeString(info.Platform)))
+	buf.WriteString(fmt.Sprintf(`<tr><td>Update Channel</td><td>%s</td></tr>`, html.EscapeString(info.Channel)))
 	buf.WriteString(fmt.Sprintf(`<tr><td>Total Nodes</td><td>%d</td></tr>`, info.NodeCount))
 	buf.WriteString(fmt.Sprintf(`<tr><td>Control Plane Nodes</td><td>%d</td></tr>`, info.ControlPlaneNodes))
 	buf.WriteString(fmt.Sprintf(`<tr><td>Worker Nodes</td><td>%d</td></tr>`, info.WorkerNodes))
-	buf.WriteString(fmt.Sprintf(`<tr><td>Assessment Profile</td><td>%s</td></tr>`, assessment.Spec.Profile))
+	buf.WriteString(fmt.Sprintf(`<tr><td>Assessment Profile</td><td>%s</td></tr>`, html.EscapeString(assessment.Spec.Profile)))
 	buf.WriteString(`</table>`)
 
 	// Summary
@@ -480,11 +481,11 @@ func GenerateHTML(assessment *assessmentv1alpha1.ClusterAssessment) ([]byte, err
 	for _, status := range statusOrder {
 		for _, f := range findingsByStatus[status] {
 			buf.WriteString(fmt.Sprintf(`<div class="finding status-%s">`, f.Status))
-			buf.WriteString(fmt.Sprintf(`<div class="finding-title">[%s] %s</div>`, f.Status, f.Title))
-			buf.WriteString(fmt.Sprintf(`<div class="finding-desc">%s</div>`, f.Description))
-			buf.WriteString(fmt.Sprintf(`<div class="finding-meta">Category: %s | Validator: %s</div>`, f.Category, f.Validator))
+			buf.WriteString(fmt.Sprintf(`<div class="finding-title">[%s] %s</div>`, f.Status, html.EscapeString(f.Title)))
+			buf.WriteString(fmt.Sprintf(`<div class="finding-desc">%s</div>`, html.EscapeString(f.Description)))
+			buf.WriteString(fmt.Sprintf(`<div class="finding-meta">Category: %s | Validator: %s</div>`, html.EscapeString(f.Category), html.EscapeString(f.Validator)))
 			if f.Recommendation != "" && (f.Status == assessmentv1alpha1.FindingStatusFail || f.Status == assessmentv1alpha1.FindingStatusWarn) {
-				buf.WriteString(fmt.Sprintf(`<div class="recommendation">💡 %s</div>`, f.Recommendation))
+				buf.WriteString(fmt.Sprintf(`<div class="recommendation">💡 %s</div>`, html.EscapeString(f.Recommendation)))
 			}
 			if len(f.References) > 0 {
 				buf.WriteString(`<div class="finding-meta" style="margin-top: 5px;">References: `)
@@ -492,7 +493,7 @@ func GenerateHTML(assessment *assessmentv1alpha1.ClusterAssessment) ([]byte, err
 					if i > 0 {
 						buf.WriteString(", ")
 					}
-					buf.WriteString(fmt.Sprintf(`<a href="%s">%s</a>`, ref, truncateURL(ref)))
+					buf.WriteString(fmt.Sprintf(`<a href="%s">%s</a>`, html.EscapeString(ref), html.EscapeString(truncateURL(ref))))
 				}
 				buf.WriteString(`</div>`)
 			}
