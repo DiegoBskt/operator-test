@@ -39,7 +39,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: manager
-          image: ghcr.io/diegobskt/cluster-assessment-operator:v1.2.31
+          image: ghcr.io/diegobskt/cluster-assessment-operator:v1.2.32
           imagePullPolicy: IfNotPresent
           command:
             - /manager

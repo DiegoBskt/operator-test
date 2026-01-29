@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: plugin
-          image: ghcr.io/diegobskt/cluster-assessment-operator-console:v1.2.31
+          image: ghcr.io/diegobskt/cluster-assessment-operator-console:v1.2.32
           imagePullPolicy: Always
           ports:
             - containerPort: 9001

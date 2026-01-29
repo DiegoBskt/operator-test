@@ -24,7 +24,7 @@ metadata:
     # OLM Best Practices annotations
     capabilities: Basic Install
     categories: Monitoring,Developer Tools
-    containerImage: ghcr.io/diegobskt/cluster-assessment-operator:v1.2.31
+    containerImage: ghcr.io/diegobskt/cluster-assessment-operator:v1.2.32
     createdAt: "2026-01-15T14:00:00Z"
     description: Read-only OpenShift cluster configuration assessment operator
     operators.operatorframework.io/builder: operator-sdk-v1.34.0
@@ -33,13 +33,13 @@ metadata:
     support: Community
     # Upgrade path configuration per OLM best practices:
     # - skipRange allows direct upgrades from older versions to this version
-    olm.skipRange: ">=1.0.0 <1.2.31"
+    olm.skipRange: ">=1.0.0 <1.2.32"
     # Multi-arch support annotations
     operatorframework.io/suggested-namespace: cluster-assessment-operator
     operatorframework.io/arch.amd64: supported
     operatorframework.io/arch.arm64: supported
     operatorframework.io/os.linux: supported
-  name: cluster-assessment-operator.v1.2.31
+  name: cluster-assessment-operator.v1.2.32
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -343,7 +343,7 @@ spec:
               spec:
                 containers:
                   - name: manager
-                    image: ghcr.io/diegobskt/cluster-assessment-operator:v1.2.31
+                    image: ghcr.io/diegobskt/cluster-assessment-operator:v1.2.32
                     imagePullPolicy: IfNotPresent
                     command:
                       - /manager
@@ -400,7 +400,7 @@ spec:
               spec:
                 containers:
                   - name: plugin
-                    image: ghcr.io/diegobskt/cluster-assessment-operator-console:v1.2.31
+                    image: ghcr.io/diegobskt/cluster-assessment-operator-console:v1.2.32
                     imagePullPolicy: Always
                     ports:
                       - containerPort: 9001
@@ -475,6 +475,6 @@ spec:
   provider:
     name: Community
     url: https://github.com/diegobskt/cluster-assessment-operator
-  version: 1.2.31
+  version: 1.2.32
   # Replaces field - required for upgrade graph
-  replaces: cluster-assessment-operator.v1.2.28
+  replaces: cluster-assessment-operator.v1.2.31
