@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"fmt"
 	"html"
+	"strings"
 	"time"
 
 	"github.com/jung-kurt/gofpdf"
@@ -493,7 +494,14 @@ func GenerateHTML(assessment *assessmentv1alpha1.ClusterAssessment) ([]byte, err
 					if i > 0 {
 						buf.WriteString(", ")
 					}
-					buf.WriteString(fmt.Sprintf(`<a href="%s">%s</a>`, html.EscapeString(ref), html.EscapeString(truncateURL(ref))))
+					// Only allow http and https schemes for links to prevent XSS (e.g., javascript:)
+					lowerRef := strings.ToLower(ref)
+					if strings.HasPrefix(lowerRef, "http://") || strings.HasPrefix(lowerRef, "https://") {
+						buf.WriteString(fmt.Sprintf(`<a href="%s">%s</a>`, html.EscapeString(ref), html.EscapeString(truncateURL(ref))))
+					} else {
+						// Render unsafe URLs as plain text
+						buf.WriteString(html.EscapeString(ref))
+					}
 				}
 				buf.WriteString(`</div>`)
 			}
