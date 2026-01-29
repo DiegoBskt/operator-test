@@ -10,6 +10,9 @@ import {
     FormSelectOption,
     Checkbox,
     Alert,
+    FormHelperText,
+    HelperText,
+    HelperTextItem,
 } from '@patternfly/react-core';
 import { k8sCreate, K8sModel } from '@openshift-console/dynamic-plugin-sdk';
 
@@ -148,6 +151,15 @@ export default function CreateAssessmentModal({
                             />
                         ))}
                     </FormSelect>
+                    <FormHelperText>
+                        <HelperText>
+                            <HelperTextItem variant="default">
+                                {profile === 'production'
+                                    ? 'Strict checks suitable for production environments.'
+                                    : 'Relaxed checks suitable for development or test environments.'}
+                            </HelperTextItem>
+                        </HelperText>
+                    </FormHelperText>
                 </FormGroup>
                 <FormGroup label="Report Formats" role="group">
                     <Checkbox
