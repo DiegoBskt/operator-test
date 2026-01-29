@@ -17,9 +17,7 @@ import {
     Toolbar,
     ToolbarContent,
     ToolbarItem,
-    InputGroup,
-    InputGroupItem,
-    TextInput,
+    SearchInput,
     FormSelect,
     FormSelectOption,
     Pagination,
@@ -134,19 +132,13 @@ export default function FindingsTable({ findings }: FindingsTableProps) {
             <Toolbar id="findings-toolbar">
                 <ToolbarContent>
                     <ToolbarItem>
-                        <InputGroup>
-                            <InputGroupItem isFill>
-                                <TextInput
-                                    name="search"
-                                    id="search-input"
-                                    type="text"
-                                    aria-label="Search findings"
-                                    placeholder="Search findings..."
-                                    value={searchValue}
-                                    onChange={(_event, value) => setSearchValue(value)}
-                                />
-                            </InputGroupItem>
-                        </InputGroup>
+                        <SearchInput
+                            aria-label="Search findings"
+                            placeholder="Search findings..."
+                            value={searchValue}
+                            onChange={(_event, value) => setSearchValue(value)}
+                            onClear={() => setSearchValue('')}
+                        />
                     </ToolbarItem>
                     <ToolbarItem>
                         <FormSelect

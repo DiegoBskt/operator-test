@@ -25,7 +25,6 @@ import {
     SyncIcon,
     CheckCircleIcon,
     ExclamationTriangleIcon,
-    InfoCircleIcon,
 } from '@patternfly/react-icons';
 import { useK8sWatchResource, k8sPatch, K8sModel } from '@openshift-console/dynamic-plugin-sdk';
 import { Link } from 'react-router-dom';
