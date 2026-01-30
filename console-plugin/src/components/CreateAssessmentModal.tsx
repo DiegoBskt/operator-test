@@ -122,7 +122,12 @@ export default function CreateAssessmentModal({
                 >
                     Create
                 </Button>,
-                <Button key="cancel" variant="link" onClick={handleClose}>
+                <Button
+                    key="cancel"
+                    variant="link"
+                    onClick={handleClose}
+                    isDisabled={isSubmitting}
+                >
                     Cancel
                 </Button>,
             ]}
@@ -141,6 +146,7 @@ export default function CreateAssessmentModal({
                         value={name}
                         onChange={(_event, value) => setName(value)}
                         placeholder="my-assessment"
+                        isDisabled={isSubmitting}
                     />
                 </FormGroup>
                 <FormGroup label="Profile" fieldId="assessment-profile">
@@ -148,6 +154,7 @@ export default function CreateAssessmentModal({
                         id="assessment-profile"
                         value={profile}
                         onChange={(_event, value) => setProfile(value)}
+                        isDisabled={isSubmitting}
                     >
                         {profileOptions.map((option) => (
                             <FormSelectOption
@@ -173,12 +180,14 @@ export default function CreateAssessmentModal({
                         label="HTML Report"
                         isChecked={enableHtml}
                         onChange={(_event, checked) => setEnableHtml(checked)}
+                        isDisabled={isSubmitting}
                     />
                     <Checkbox
                         id="format-json"
                         label="JSON Report"
                         isChecked={enableJson}
                         onChange={(_event, checked) => setEnableJson(checked)}
+                        isDisabled={isSubmitting}
                     />
                     {(!enableHtml && !enableJson) && (
                         <FormHelperText>
