@@ -471,7 +471,7 @@ func (r *ClusterAssessmentReconciler) storeReportInConfigMap(ctx context.Context
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cmName,
-			Namespace: "cluster-assessment-operator",
+			Namespace: assessment.Namespace,
 			Labels: map[string]string{
 				"app.kubernetes.io/name":       "cluster-assessment-operator",
 				"app.kubernetes.io/managed-by": "cluster-assessment-operator",
@@ -523,15 +523,10 @@ func (r *ClusterAssessmentReconciler) exportToGit(ctx context.Context, assessmen
 	// Retrieve credentials if SecretRef is provided
 	var auth *http.BasicAuth
 	if gitSpec.SecretRef != "" {
-		namespace := os.Getenv("POD_NAMESPACE")
-		if namespace == "" {
-			namespace = "cluster-assessment-operator"
-		}
-
 		secret := &corev1.Secret{}
 		err := r.Get(ctx, client.ObjectKey{
 			Name:      gitSpec.SecretRef,
-			Namespace: namespace,
+			Namespace: assessment.Namespace,
 		}, secret)
 		if err != nil {
 			return fmt.Errorf("failed to get git secret: %w", err)
