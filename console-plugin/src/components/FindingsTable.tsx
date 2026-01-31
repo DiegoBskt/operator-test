@@ -4,6 +4,8 @@ import {
     Thead,
     Tr,
     Th,
+    Tbody,
+    Td,
 } from '@patternfly/react-table';
 import {
     Toolbar,
@@ -14,7 +16,14 @@ import {
     FormSelectOption,
     Pagination,
     PaginationVariant,
+    EmptyState,
+    EmptyStateBody,
+    EmptyStateIcon,
+    EmptyStateHeader,
+    EmptyStateFooter,
+    Button,
 } from '@patternfly/react-core';
+import { SearchIcon, InfoCircleIcon } from '@patternfly/react-icons';
 import { Finding } from '../types';
 import { FindingsTableRow } from './FindingsTableRow';
 
@@ -83,7 +92,25 @@ export default function FindingsTable({ findings }: FindingsTableProps) {
         return !!expandedRows[key];
     };
 
+    const clearFilters = () => {
+        setSearchValue('');
+        setSeverityFilter('All');
+        setCategoryFilter('All');
+    };
+
     const severityOptions = ['All', 'PASS', 'WARN', 'FAIL', 'INFO'];
+
+    // Early return if no findings at all (and thus no filters needed)
+    if (findings.length === 0) {
+        return (
+            <EmptyState variant="full">
+                <EmptyStateHeader titleText="No findings" icon={<EmptyStateIcon icon={InfoCircleIcon} />} headingLevel="h4" />
+                <EmptyStateBody>
+                    There are no findings to display.
+                </EmptyStateBody>
+            </EmptyState>
+        );
+    }
 
     return (
         <>
@@ -143,15 +170,33 @@ export default function FindingsTable({ findings }: FindingsTableProps) {
                         <Th>Resource</Th>
                     </Tr>
                 </Thead>
-                {paginatedFindings.map((finding, rowIndex) => (
-                    <FindingsTableRow
-                        key={finding.id || rowIndex}
-                        finding={finding}
-                        rowIndex={rowIndex}
-                        isExpanded={isRowExpanded(finding)}
-                        onToggle={handleToggle}
-                    />
-                ))}
+                {paginatedFindings.length > 0 ? (
+                    paginatedFindings.map((finding, rowIndex) => (
+                        <FindingsTableRow
+                            key={finding.id || rowIndex}
+                            finding={finding}
+                            rowIndex={rowIndex}
+                            isExpanded={isRowExpanded(finding)}
+                            onToggle={handleToggle}
+                        />
+                    ))
+                ) : (
+                    <Tbody>
+                        <Tr>
+                            <Td colSpan={5}>
+                                <EmptyState variant="sm">
+                                    <EmptyStateHeader titleText="No matching findings" icon={<EmptyStateIcon icon={SearchIcon} />} headingLevel="h4" />
+                                    <EmptyStateBody>
+                                        No findings match the current filters.
+                                    </EmptyStateBody>
+                                    <EmptyStateFooter>
+                                        <Button variant="link" onClick={clearFilters}>Clear all filters</Button>
+                                    </EmptyStateFooter>
+                                </EmptyState>
+                            </Td>
+                        </Tr>
+                    </Tbody>
+                )}
             </Table>
             <Pagination
                 itemCount={filteredFindings.length}
