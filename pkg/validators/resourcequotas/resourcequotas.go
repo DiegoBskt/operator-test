@@ -238,12 +238,13 @@ func (v *ResourceQuotasValidator) checkLimitRanges(ctx context.Context, c client
 	}
 
 	// Check for very high default limits
+	// Optimization: Hoist invariant parsing out of loop
+	eightGi := resource.MustParse("8Gi")
 	for _, lr := range limitRanges.Items {
 		for _, item := range lr.Spec.Limits {
 			if item.Type == corev1.LimitTypeContainer {
 				if defaultMem, ok := item.Default[corev1.ResourceMemory]; ok {
 					// Check if default memory is > 8Gi
-					eightGi := resource.MustParse("8Gi")
 					if defaultMem.Cmp(eightGi) > 0 {
 						veryHighDefaultLimits = append(veryHighDefaultLimits,
 							fmt.Sprintf("%s/%s (default memory: %s)", lr.Namespace, lr.Name, defaultMem.String()))
